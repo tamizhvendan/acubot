@@ -1,8 +1,11 @@
 #r "packages/FAKE/tools/FakeLib.dll"
 #load "fsi.fsx"
-open Fsi
+#load "Steps.fsx"
+
 open Fake
 open System.Diagnostics
+open Fsi
+open Steps
 
 Target "FsiInteractive" (fun _ ->
   StartProcess (fun info ->
@@ -11,24 +14,76 @@ Target "FsiInteractive" (fun _ ->
   )
 )
 
+let mutable currentStep = 1
+
 let fileName = "runner.fsx"
 let fsiHost = "http://localhost:18082"
 
-let eval () =
-  fileName
-  |> System.IO.File.ReadAllText
-  |> eval fileName fsiHost
-  |> printfn "%A"
+let printStep () =
+  match List.tryFind (fun s -> s.Id = currentStep) runner.Steps with
+  | Some step ->
+    tracefn "%s" step.Description
+  | None ->
+    tracefn "%s" runner.End
 
-Target "Watch" (fun _ ->
+let printErrors  =
+  List.iter (fun e ->
+                sprintf "[%d,%d] %s" (e.Line+1) (e.Start+1) e.Message
+                |> traceError )
+
+let handleEvalResult onSuccess = function
+| EvalErrors errs -> printErrors errs
+| EvalException ex -> traceError ex.Details
+| EvalSuccess suc -> onSuccess suc
+| _ -> tracefn "something went terribly wrong!"
+
+let rec evalExpressions = function
+| [] -> true
+| x::xs ->
+  match eval fileName fsiHost x with
+  | EvalErrors errs -> printErrors errs; false
+  | EvalException ex -> traceError ex.Details; false
+  | EvalSuccess suc ->
+    evalExpressions xs
+  | _ -> true
+
+let eval onSuccess code =
+    eval fileName fsiHost code
+    |> handleEvalResult onSuccess
+
+let assertStep _ =
+  match List.tryFind (fun s -> s.Id = currentStep) runner.Steps with
+  | Some step ->
+    match evalExpressions step.Expressions with
+    | true ->
+      match evalExpressions step.Asserts with
+      | true ->
+        traceFAKE "**** %s ****" step.Message
+        currentStep <- currentStep + 1
+        printStep ()
+      | _ -> ()
+    | false -> ()
+  | None -> printStep ()
+
+let watch () =
   use watcher = !! fileName |> WatchChanges (fun changes ->
-      tracefn "compiling..."
-      eval()
+      printfn "compiling..."
+      fileName
+      |> System.IO.File.ReadAllText
+      |> eval assertStep
   )
+  System.Threading.Thread.Sleep(3000)
+  printfn ""
+  printfn ""
+  tracefn "\t\t\t%s" runner.Greeting
+  printfn ""
+  printfn ""
+  printStep ()
   System.Console.ReadLine() |> ignore
   watcher.Dispose()
   killAllCreatedProcesses()
-)
+
+Target "Watch" (fun _ -> watch ())
 
 "FsiInteractive"
 ==> "Watch"
