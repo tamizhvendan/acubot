@@ -1,0 +1,1 @@
+type WebPart = string -> Async<string option>
