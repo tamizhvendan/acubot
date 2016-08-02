@@ -48,6 +48,11 @@ let rec evalExpressions = function
     evalExpressions xs
   | _ -> true
 
+let evalExpected code =
+  match eval fileName fsiHost code with
+  | EvalSuccess suc -> suc.Output.Trim()
+  | _ -> ""
+
 let rec evalAsserts = function
 | [] -> true
 | x::xs ->
@@ -55,10 +60,12 @@ let rec evalAsserts = function
   | EvalErrors errs -> printErrors errs; false
   | EvalException ex -> traceError ex.Details; false
   | EvalSuccess suc ->
-    if suc.Details = (snd x) then
+    let actualOutput = suc.Output.Trim()
+    let expectedOutput = evalExpected (snd x)
+    if actualOutput = expectedOutput then
       evalAsserts xs
     else
-      sprintf "%s excepts %s but found %s" (fst x) (snd x) suc.Details
+      sprintf "`%s` excepts %s but found %s" (fst x) expectedOutput actualOutput
       |> traceError
       false
   | _ -> true
@@ -95,7 +102,7 @@ let watch () =
       |> System.IO.File.ReadAllText
       |> eval assertStep
   )
-  System.Threading.Thread.Sleep(3000)
+  System.Threading.Thread.Sleep(1000)
   printfn ""
   printfn ""
   tracefn "\t\t\t%s" runner.Greeting

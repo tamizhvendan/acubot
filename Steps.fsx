@@ -48,6 +48,37 @@ let steps = [
                       ("toStatusCode NotFound", "404")
                       ("toStatusCode BadRequest", "400")]
   }
+  {
+    Id = 5
+    Description = "Create a Record type for modeling `Response`"
+    Expressions = []
+    Message = "Great!"
+    Asserts = Compiler ["""{Response.StatusCode = Ok; Content = "foo"}"""]
+  }
+  {
+    Id = 6
+    Description = "Create a Record type for modeling `Context`"
+    Expressions = [
+                    """let res = {StatusCode = Ok; Content = "foo"}"""
+                    """let req = {Method = Get; Path = "foo"}"""
+    ]
+    Message = "Fantastic!"
+    Asserts = Compiler ["""{Request = req; Response = res}"""]
+  }
+  {
+    Id = 7
+    Description = "Create a `OK` function"
+    Expressions = [
+                    """let res = {StatusCode = Ok; Content = "foo"}"""
+                    """let req = {Method = Get; Path = "foo"}"""
+                    """let ctx = {Request = req; Response = res}"""
+                    """let expectedRes = {res with Content = "test"}"""
+                    """let expected = Some {ctx with Response = expectedRes}"""
+                    """let result = OK "test" ctx"""
+    ]
+    Message = "Fantastic!"
+    Asserts = Value ["result", "expected"]
+  }
 ]
 
 let runner = {

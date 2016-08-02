@@ -11,3 +11,17 @@ let toStatusCode = function
 | Ok -> 200
 | NotFound -> 404
 | BadRequest -> 400
+
+type Response = {
+  StatusCode : StatusCode
+  Content : string
+}
+
+type Context = {
+  Request : Request
+  Response : Response
+}
+
+let OK content ctx =
+  let res = {StatusCode = Ok; Content = content}
+  Some {ctx with Response = res}
