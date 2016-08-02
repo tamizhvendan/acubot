@@ -1,7 +1,11 @@
+type Asserts =
+| Compiler of string list
+| Value of (string * string) list
+
 type Step = {
   Id : int
   Description : string
-  Asserts : string list
+  Asserts : Asserts
   Expressions : string list
   Message : string
 }
@@ -18,14 +22,31 @@ let steps = [
     Description = "Create a Discrimintated Union Type to represent `HttpMethod`"
     Expressions = []
     Message = "That's a good start!"
-    Asserts = ["HttpMethod.Get"; "Put"; "Post"]
+    Asserts = Compiler ["HttpMethod.Get"; "Put"; "Post"]
   }
   {
     Id = 2
     Description = "Create a Record type for modeling `Request`"
     Expressions = []
     Message = "Great! Let's move on"
-    Asserts = ["""{Request.Method = Get; Path = "foo"}"""]
+    Asserts = Compiler ["""{Request.Method = Get; Path = "foo"}"""]
+  }
+  {
+    Id = 3
+    Description = "Create a Discrimintated Union Type to represent HTTP `StatusCode`"
+    Expressions = []
+    Message = "Awesome! Keep going!!"
+    Asserts = Compiler ["StatusCode.Ok"; "NotFound"; "BadRequest"]
+  }
+  {
+    Id = 4
+    Description = "Define a function to return the HTTP status code"
+    Expressions = []
+    Message = "Wow! That's your first function"
+    Asserts = Value [
+                      ("toStatusCode Ok", "200")
+                      ("toStatusCode NotFound", "404")
+                      ("toStatusCode BadRequest", "400")]
   }
 ]
 

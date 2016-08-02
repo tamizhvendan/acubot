@@ -14,7 +14,8 @@ Target "FsiInteractive" (fun _ ->
   )
 )
 
-let mutable currentStep = 1
+let mutable currentStep =
+  environVarOrDefault "RUNNER_STEP" "1" |> int
 
 let fileName = "runner.fsx"
 let fsiHost = "http://localhost:18082"
@@ -47,21 +48,43 @@ let rec evalExpressions = function
     evalExpressions xs
   | _ -> true
 
+let rec evalAsserts = function
+| [] -> true
+| x::xs ->
+  match eval fileName fsiHost (fst x) with
+  | EvalErrors errs -> printErrors errs; false
+  | EvalException ex -> traceError ex.Details; false
+  | EvalSuccess suc ->
+    if suc.Details = (snd x) then
+      evalAsserts xs
+    else
+      sprintf "%s excepts %s but found %s" (fst x) (snd x) suc.Details
+      |> traceError
+      false
+  | _ -> true
+
 let eval onSuccess code =
     eval fileName fsiHost code
     |> handleEvalResult onSuccess
 
 let assertStep _ =
+  let moveToNext step =
+    traceFAKE "**** %s ****" step.Message
+    currentStep <- currentStep + 1
+    printStep ()
   match List.tryFind (fun s -> s.Id = currentStep) runner.Steps with
   | Some step ->
     match evalExpressions step.Expressions with
     | true ->
-      match evalExpressions step.Asserts with
-      | true ->
-        traceFAKE "**** %s ****" step.Message
-        currentStep <- currentStep + 1
-        printStep ()
-      | _ -> ()
+      match step.Asserts with
+      | Compiler exprs ->
+        match evalExpressions exprs with
+        | true -> moveToNext step
+        | _ -> ()
+      | Value asserts ->
+        match evalAsserts asserts with
+        | true -> moveToNext step
+        | _ -> ()
     | false -> ()
   | None -> printStep ()
 
