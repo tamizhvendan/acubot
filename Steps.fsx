@@ -16,6 +16,27 @@ type Runner = {
   Steps : Step list
 }
 
+let res2 =
+  sprintf """let %s = {StatusCode = %s; Content = "%s"}"""
+let res = res2 "res"
+
+let req2 =
+  sprintf """let %s = {Method = %s; Path = "%s"}"""
+let req = req2 "req"
+
+let ctx2 =
+  sprintf """let %s = {Request = %s; Response = %s}"""
+
+let ctx = ctx2 "ctx"
+
+let ctx3 = [
+  req "Get" "foo"
+  res "Ok" "foo"
+  ctx "req" "res"
+]
+
+let (++) = List.append
+
 let steps = [
   {
     Id = 1
@@ -29,7 +50,7 @@ let steps = [
     Description = "Create a Record type for modeling `Request`"
     Expressions = []
     Message = "Great! Let's move on"
-    Asserts = Compiler ["""{Request.Method = Get; Path = "foo"}"""]
+    Asserts = Compiler [req "Get" "foo"]
   }
   {
     Id = 3
@@ -53,29 +74,23 @@ let steps = [
     Description = "Create a Record type for modeling `Response`"
     Expressions = []
     Message = "Great!"
-    Asserts = Compiler ["""{Response.StatusCode = Ok; Content = "foo"}"""]
+    Asserts = Compiler [res "Ok" "foo"]
   }
   {
     Id = 6
     Description = "Create a Record type for modeling `Context`"
-    Expressions = [
-                    """let res = {StatusCode = Ok; Content = "foo"}"""
-                    """let req = {Method = Get; Path = "foo"}"""
-    ]
+    Expressions = [res "Ok" "foo";req "Get" "foo"]
     Message = "Fantastic!"
-    Asserts = Compiler ["""{Request = req; Response = res}"""]
+    Asserts = Compiler [ctx "req" "res"]
   }
   {
     Id = 7
     Description = "Create a `OK` function"
-    Expressions = [
-                    """let res = {StatusCode = Ok; Content = "foo"}"""
-                    """let req = {Method = Get; Path = "foo"}"""
-                    """let ctx = {Request = req; Response = res}"""
-                    """let expectedRes = {res with Content = "test"}"""
-                    """let expected = Some {ctx with Response = expectedRes}"""
-                    """let result = OK "test" ctx"""
-    ]
+    Expressions = ctx3 ++ [
+                            res2 "expectedRes" "Ok" "test"
+                            ctx2 "expectedCtx" "req" "expectedRes"
+                            "let expected = Some expectedCtx"
+                            """let result = OK "test" ctx""" ]
     Message = "Fantastic!"
     Asserts = Value ["result", "expected"]
   }

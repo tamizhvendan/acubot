@@ -1,7 +1,8 @@
-type HttpMethod = Create | Delete | Get | Put | Post
+type HttpMethod = Create | Delete | Get | Post | Put
 
 type Request = {
   Method : HttpMethod
+
   Path : string
 }
 
