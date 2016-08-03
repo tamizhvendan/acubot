@@ -23,6 +23,8 @@ type Context = {
   Response : Response
 }
 
+type Handler = Context -> Context option
+
 let OK content ctx =
   let res = {StatusCode = Ok; Content = content}
   Some {ctx with Response = res}

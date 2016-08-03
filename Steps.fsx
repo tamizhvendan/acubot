@@ -84,7 +84,14 @@ let steps = [
     Asserts = Compiler [ctx "req" "res"]
   }
   {
-    Id = 7
+      Id = 7
+      Description = "Create a Handler type modeling handler function"
+      Expressions = ctx3
+      Message = "Welcome to functional programming!"
+      Asserts = Compiler ["let test : Handler = Some"]
+  }
+  {
+    Id = 8
     Description = "Create a `OK` function"
     Expressions = ctx3 ++ [
                             res2 "expectedRes" "Ok" "test"
