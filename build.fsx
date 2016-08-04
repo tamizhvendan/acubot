@@ -17,7 +17,7 @@ Target "FsiInteractive" (fun _ ->
 let mutable currentStep =
   environVarOrDefault "RUNNER_STEP" "1" |> int
 
-let fileName = "runner.fsx"
+let fileName = "MiniSuave.fsx"
 let fsiHost = "http://localhost:18082"
 
 let printStep () =
@@ -52,6 +52,10 @@ let evalExpected code =
   match eval fileName fsiHost code with
   | EvalSuccess suc -> suc.Output.Trim()
   | _ -> ""
+
+let evalOutput code =
+  let output = evalExpected code
+  output.Replace("val it : unit = ()", "").Replace("\r\n", "")
 
 let rec evalAsserts = function
 | [] -> true
@@ -92,6 +96,14 @@ let assertStep _ =
         match evalAsserts asserts with
         | true -> moveToNext step
         | _ -> ()
+      | Output (code, expected) ->
+        let out = evalOutput code
+        printfn "%A" out
+        if out = expected then
+          moveToNext step
+        else
+          sprintf "Expected %s but found %s" expected out
+          |> traceError
     | false -> ()
   | None -> printStep ()
 

@@ -1,6 +1,7 @@
 type Asserts =
 | Compiler of string list
 | Value of (string * string) list
+| Output of (string * string)
 
 type Step = {
   Id : int
@@ -34,8 +35,13 @@ let ctx3 = [
   res "Ok" "foo"
   ctx "req" "res"
 ]
-
 let (++) = List.append
+
+let handlerExpressions handler statusCode =
+  ctx3 ++ [ res2 "expectedRes" statusCode "test"
+            ctx2 "expectedCtx" "req" "expectedRes"
+            "let expected = Some expectedCtx"
+            sprintf """let result = %s "test" ctx""" handler]
 
 let steps = [
   {
@@ -92,12 +98,22 @@ let steps = [
   }
   {
     Id = 8
-    Description = "Create a `OK` function"
-    Expressions = ctx3 ++ [
-                            res2 "expectedRes" "Ok" "test"
-                            ctx2 "expectedCtx" "req" "expectedRes"
-                            "let expected = Some expectedCtx"
-                            """let result = OK "test" ctx""" ]
+    Description = "Create a `OK` handler"
+    Expressions = handlerExpressions "OK" "Ok"
+    Message = "Fantastic!"
+    Asserts = Value ["result", "expected"]
+  }
+  {
+    Id = 9
+    Description = "Create a `ConsoleWriter` function"
+    Expressions = ctx3
+    Message = "Fantastic!"
+    Asserts = Output ("""ConsoleWriter ctx (OK "test")""", "StatusCode: 200\nContent : test\n")
+  }
+  {
+    Id = 10
+    Description = "Create a `NOT_FOUND` handler"
+    Expressions = handlerExpressions "NOT_FOUND" "NotFound"
     Message = "Fantastic!"
     Asserts = Value ["result", "expected"]
   }

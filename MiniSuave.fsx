@@ -28,3 +28,17 @@ type Handler = Context -> Context option
 let OK content ctx =
   let res = {StatusCode = Ok; Content = content}
   Some {ctx with Response = res}
+
+let ConsoleWriter ctx handler =
+  match handler ctx with
+  | Some ctx ->
+    ctx.Response.StatusCode
+    |> toStatusCode
+    |> printfn "StatusCode: %d"
+    printfn "Content : %s" ctx.Response.Content
+  | None ->
+    printfn "Empty"
+
+let NOT_FOUND content ctx =
+  let res = { StatusCode = NotFound; Content = content}
+  Some {ctx with Response = res}
