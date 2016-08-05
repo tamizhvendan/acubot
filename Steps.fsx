@@ -1,6 +1,7 @@
 type Asserts =
 | Compiler of string list
 | Value of (string * string) list
+| ExecuteValue of (string list * (string * string)) list
 | Output of (string * string)
 
 type Step = {
@@ -36,12 +37,21 @@ let ctx3 = [
   ctx "req" "res"
 ]
 let (++) = List.append
+let (<+>) = sprintf "%s\n%s"
 
-let handlerExpressions handler statusCode =
+let result = sprintf "let result = %s ctx"
+let expected = sprintf "let expected : Context option = %s"
+
+let responseHandlerExpressions handler statusCode =
   ctx3 ++ [ res2 "expectedRes" statusCode "test"
             ctx2 "expectedCtx" "req" "expectedRes"
-            "let expected = Some expectedCtx"
+            expected "Some expectedCtx"
             sprintf """let result = %s "test" ctx""" handler]
+
+let filterHandlerExpressions httpMethod handler =
+  [ req httpMethod "foo"
+    res "Ok" "foo"
+    ctx "req" "res"]
 
 let steps = [
   {
@@ -99,7 +109,7 @@ let steps = [
   {
     Id = 8
     Description = "Create a `OK` handler"
-    Expressions = handlerExpressions "OK" "Ok"
+    Expressions = responseHandlerExpressions "OK" "Ok"
     Message = "Keep going!"
     Asserts = Value ["result", "expected"]
   }
@@ -113,23 +123,33 @@ let steps = [
   {
     Id = 10
     Description = "Create a `NOT_FOUND` handler"
-    Expressions = handlerExpressions "NOT_FOUND" "NotFound"
+    Expressions = responseHandlerExpressions "NOT_FOUND" "NotFound"
     Message = "Fantastic!"
     Asserts = Value ["result", "expected"]
   }
   {
     Id = 11
     Description = "Create a `BAD_REQUEST` handler"
-    Expressions = handlerExpressions "BAD_REQUEST" "BadRequest"
+    Expressions = responseHandlerExpressions "BAD_REQUEST" "BadRequest"
     Message = "Fantastic!"
     Asserts = Value ["result", "expected"]
   }
   {
     Id = 12
     Description = "Now it's time for refactoring and partial application!"
-    Expressions = handlerExpressions "responseHandler BadRequest" "BadRequest"
+    Expressions = responseHandlerExpressions "responseHandler BadRequest" "BadRequest"
     Message = "Good. You are getting a grip on functional programming!"
     Asserts = Value ["result", "expected"]
+  }
+  {
+    Id = 13
+    Description = "Let's start writing filters!"
+    Expressions = filterHandlerExpressions "Get" "GET"
+    Message = "Amazing!"
+    Asserts =
+      ExecuteValue [
+        [expected "Some ctx";result "GET"], ("result", "expected")
+        [req "Post" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")]
   }
 ]
 

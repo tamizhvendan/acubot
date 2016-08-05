@@ -50,18 +50,21 @@ let rec evalExpressions = function
 
 let evalExpected code =
   match eval fileName fsiHost code with
-  | EvalSuccess suc -> suc.Output.Trim()
+  | EvalSuccess suc ->
+    suc.Output.Trim()
   | _ -> ""
 
 let evalOutput code =
   let output = evalExpected code
-  output.Replace("val it : unit = ()", "").Replace("\r\n", "")
+  output
+    .Replace("val it : unit = ()", "")
+    .Replace("\r\n", "")
 
 let rec evalAsserts = function
 | [] -> true
 | x::xs ->
   match eval fileName fsiHost (fst x) with
-  | EvalErrors errs -> printErrors errs; false
+  | EvalErrors errs ->printErrors errs; false
   | EvalException ex -> traceError ex.Details; false
   | EvalSuccess suc ->
     let actualOutput = suc.Output.Trim()
@@ -69,10 +72,20 @@ let rec evalAsserts = function
     if actualOutput = expectedOutput then
       evalAsserts xs
     else
-      sprintf "`%s` excepts %s but found %s" (fst x) expectedOutput actualOutput
+      sprintf "Expected %s but found %s" expectedOutput actualOutput
       |> traceError
       false
   | _ -> true
+
+let rec evalExecuteValueAssserts = function
+| [] -> true
+| x :: xs ->
+  match evalExpressions (fst x) with
+  | true ->
+     match evalAsserts [snd x] with
+     | true -> evalExecuteValueAssserts xs
+     | _ -> false
+  | _ -> false
 
 let eval onSuccess code =
     eval fileName fsiHost code
@@ -94,6 +107,10 @@ let assertStep _ =
         | _ -> ()
       | Value asserts ->
         match evalAsserts asserts with
+        | true -> moveToNext step
+        | _ -> ()
+      | ExecuteValue asserts ->
+        match evalExecuteValueAssserts asserts with
         | true -> moveToNext step
         | _ -> ()
       | Output (code, expected) ->

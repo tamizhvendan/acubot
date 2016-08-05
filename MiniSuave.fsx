@@ -44,3 +44,8 @@ let ConsoleWriter ctx handler =
 let NOT_FOUND = responseHandler NotFound
 
 let BAD_REQUEST = responseHandler BadRequest
+
+let GET ctx =
+  match ctx.Request.Method with
+  | Get -> Some ctx
+  | _ -> None
