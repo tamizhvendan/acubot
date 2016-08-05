@@ -25,9 +25,11 @@ type Context = {
 
 type Handler = Context -> Context option
 
-let OK content ctx =
-  let res = {StatusCode = Ok; Content = content}
+let responseHandler statusCode content ctx =
+  let res = {StatusCode = statusCode; Content = content}
   Some {ctx with Response = res}
+
+let OK = responseHandler Ok
 
 let ConsoleWriter ctx handler =
   match handler ctx with
@@ -39,6 +41,6 @@ let ConsoleWriter ctx handler =
   | None ->
     printfn "Empty"
 
-let NOT_FOUND content ctx =
-  let res = { StatusCode = NotFound; Content = content}
-  Some {ctx with Response = res}
+let NOT_FOUND = responseHandler NotFound
+
+let BAD_REQUEST = responseHandler BadRequest

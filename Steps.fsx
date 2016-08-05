@@ -70,10 +70,10 @@ let steps = [
     Description = "Define a function to return the HTTP status code"
     Expressions = []
     Message = "Wow! That's your first function"
-    Asserts = Value [
-                      ("toStatusCode Ok", "200")
+    Asserts = Value [ ("toStatusCode Ok", "200")
                       ("toStatusCode NotFound", "404")
                       ("toStatusCode BadRequest", "400")]
+
   }
   {
     Id = 5
@@ -100,7 +100,7 @@ let steps = [
     Id = 8
     Description = "Create a `OK` handler"
     Expressions = handlerExpressions "OK" "Ok"
-    Message = "Fantastic!"
+    Message = "Keep going!"
     Asserts = Value ["result", "expected"]
   }
   {
@@ -115,6 +115,20 @@ let steps = [
     Description = "Create a `NOT_FOUND` handler"
     Expressions = handlerExpressions "NOT_FOUND" "NotFound"
     Message = "Fantastic!"
+    Asserts = Value ["result", "expected"]
+  }
+  {
+    Id = 11
+    Description = "Create a `BAD_REQUEST` handler"
+    Expressions = handlerExpressions "BAD_REQUEST" "BadRequest"
+    Message = "Fantastic!"
+    Asserts = Value ["result", "expected"]
+  }
+  {
+    Id = 12
+    Description = "Now it's time for refactoring and partial application!"
+    Expressions = handlerExpressions "responseHandler BadRequest" "BadRequest"
+    Message = "Good. You are getting a grip on functional programming!"
     Asserts = Value ["result", "expected"]
   }
 ]
