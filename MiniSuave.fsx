@@ -45,7 +45,20 @@ let NOT_FOUND = responseHandler NotFound
 
 let BAD_REQUEST = responseHandler BadRequest
 
-let GET ctx =
-  match ctx.Request.Method with
-  | Get -> Some ctx
+let filter httpMethod ctx =
+  match ctx.Request.Method = httpMethod with
+  | true -> Some ctx
   | _ -> None
+
+let GET = filter Get
+let POST = filter Post
+let PUT = filter Put
+
+let compose h1 h2 ctx =
+  match h1 ctx with
+  | Some ctx -> h2 ctx
+  | None -> None
+
+let (>=>) = compose
+
+let app = GET >=> OK "test"

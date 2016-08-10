@@ -151,6 +151,41 @@ let steps = [
         [expected "Some ctx";result "GET"], ("result", "expected")
         [req "Post" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")]
   }
+  {
+    Id = 14
+    Description = "Create a POST filter!"
+    Expressions = filterHandlerExpressions "Post" "POST"
+    Message = "That's Awesome!"
+    Asserts =
+      ExecuteValue [
+        [expected "Some ctx";result "POST"], ("result", "expected")
+        [req "Get" "foo"; ctx "req" "res"; expected "None";result "POST"], ("result", "expected")]
+  }
+  {
+    Id = 15
+    Description = "Create a PUT filter!"
+    Expressions = filterHandlerExpressions "Put" "PUT"
+    Message = "Cool!"
+    Asserts =
+      ExecuteValue [
+        [expected "Some ctx";result "PUT"], ("result", "expected")
+        [req "Get" "foo"; ctx "req" "res"; expected "None";result "PUT"], ("result", "expected")]
+  }
+  {
+    Id = 16
+    Description = "It's time for refactoring!"
+    Expressions = ctx3
+    Message = "Making great progress!"
+    Asserts =
+      ExecuteValue [
+        [expected "Some ctx"; result "filter Get"], ("result", "expected")
+        [req "Get" "foo"; ctx "req" "res"; expected "None";result "PUT"], ("result", "expected")
+        [req "Post" "foo"; ctx "req" "res"; expected "None";result "PUT"], ("result", "expected")
+        [req "Get" "foo"; ctx "req" "res"; expected "None";result "POST"], ("result", "expected")
+        [req "Put" "foo"; ctx "req" "res"; expected "None";result "POST"], ("result", "expected")
+        [req "Post" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")
+        [req "Put" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")]
+  }
 ]
 
 let runner = {
