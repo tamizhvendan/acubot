@@ -53,6 +53,10 @@ let filter httpMethod ctx =
 let GET = filter Get
 let POST = filter Post
 let PUT = filter Put
+let Path path ctx =
+  match ctx.Request.Path = path with
+  | true -> Some ctx
+  | _ -> None
 
 let compose h1 h2 ctx =
   match h1 ctx with
@@ -61,4 +65,11 @@ let compose h1 h2 ctx =
 
 let (>=>) = compose
 
-let app = GET >=> OK "test"
+let rec Choose webparts context =
+  match webparts with
+  | [] -> None
+  | x :: xs ->
+    let result = x context
+    match result with
+    | Some x -> Some x
+    | None -> Choose xs context

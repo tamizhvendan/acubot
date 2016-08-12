@@ -186,6 +186,63 @@ let steps = [
         [req "Post" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")
         [req "Put" "foo"; ctx "req" "res"; expected "None";result "GET"], ("result", "expected")]
   }
+  {
+    Id = 17
+    Description = "What about a Path filter?"
+    Expressions = ctx3
+    Asserts =
+      ExecuteValue [
+        [req "Get" "/foo"; ctx "req" "res"; expected "None";result """Path "/test" """], ("result", "expected")
+        [req "Get" "/foo"; ctx "req" "res"; expected "Some ctx";result """Path "/foo" """], ("result", "expected")
+      ]
+    Message = "Great work!"
+  }
+  {
+    Id = 18
+    Description = "let's compose!"
+    Expressions = ctx3 ++ [
+                            """let app = compose (OK "test") (OK "foo")"""
+                            res2 "expecteRes" "Ok" "foo"
+                            ctx2 "ctx2" "req" "expecteRes"
+                            ]
+    Message = "Awesomeness!"
+    Asserts = ExecuteValue[
+                [expected "Some ctx2";result "app"], ("result", "expected")
+              ]
+  }
+  {
+    Id = 19
+    Description = "You can make it even shorter!"
+    Expressions = ctx3
+    Message = "That's cool!"
+    Asserts = Value ["""((OK "test") >=> (OK "foo")) ctx""", """(compose (OK "test") (OK "foo")) ctx"""]
+  }
+  {
+    Id = 20
+    Description = "Let's make it complex"
+    Expressions = ctx3 ++ [
+                            """let app = Choose [GET >=> OK "test"; POST >=> OK "post"]"""
+                            res2 "expecteRes" "Ok" "test"]
+    Message = "Yes! You are doing 'fun'ctional programming"
+    Asserts =
+      ExecuteValue[
+        [ req "Get" ""
+          ctx2 "expecteCtx" "req" "expecteRes"
+          ctx "req" "res"
+          expected "Some expecteCtx"
+          result "app"], ("result", "expected")
+        [ req "Post" ""
+          ctx "req" "res"
+          res2 "expecteRes" "Ok" "post"
+          ctx2 "expecteCtx" "req" "expecteRes"
+          expected "Some expecteCtx"
+          result "app"], ("result", "expected")
+        [ req "Put" ""
+          ctx "req" "res"
+          expected "None"
+          result "app"], ("result", "expected")
+      ]
+  }
 ]
 
 let runner = {
