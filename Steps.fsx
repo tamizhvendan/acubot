@@ -23,7 +23,7 @@ let res2 =
 let res = res2 "res"
 
 let req2 =
-  sprintf """let %s = {Method = %s; Path = "%s"}"""
+  sprintf """let %s = {HttpMethod = %s; Path = "%s"}"""
 let req = req2 "req"
 
 let ctx2 =
