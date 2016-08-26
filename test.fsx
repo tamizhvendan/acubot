@@ -2,7 +2,7 @@
 open MiniSuave
 
 let ctx = {
-  Request = { Method = Get; Path = "" }
+  Request = { HttpMethod = Get; Path = "" }
   Response = {StatusCode = Ok; Content = ""}
 }
 
@@ -13,9 +13,9 @@ let parseRequest (input : System.String) =
   let rawType = parts.[0]
   let route = parts.[1]
   match rawType with
-  | "GET" -> {Method = Get; Path = route}
-  | "POST" -> {Method = Post; Path = route}
-  | "PUT" -> {Method = Post; Path = route}
+  | "GET" -> {HttpMethod = Get; Path = route}
+  | "POST" -> {HttpMethod = Post; Path = route}
+  | "PUT" -> {HttpMethod = Post; Path = route}
   | _ -> failwith "invalid request"
 
 let server text =

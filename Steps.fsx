@@ -143,7 +143,7 @@ let steps = [
   }
   {
     Id = 13
-    Description = "Let's start writing filters!"
+    Description = "Its time for filters! Let's start from GET"
     Expressions = filterHandlerExpressions "Get" "GET"
     Message = "Amazing!"
     Asserts =
@@ -178,7 +178,7 @@ let steps = [
     Message = "Making great progress!"
     Asserts =
       ExecuteValue [
-        [expected "Some ctx"; result "filter Get"], ("result", "expected")
+        [expected "Some ctx"; result "httpMethodFilter Get"], ("result", "expected")
         [req "Get" "foo"; ctx "req" "res"; expected "None";result "PUT"], ("result", "expected")
         [req "Post" "foo"; ctx "req" "res"; expected "None";result "PUT"], ("result", "expected")
         [req "Get" "foo"; ctx "req" "res"; expected "None";result "POST"], ("result", "expected")

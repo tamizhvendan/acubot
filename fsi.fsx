@@ -113,7 +113,7 @@ let toResult (fsiEval : FsiEval.Root) =
 let eval fileName host (content : string) =
   let body =
     content.Replace("\"", "\\\"")
-    |> sprintf """{ "file":"/%s", "line":0, "code":"%s"}""" fileName
+    |> sprintf """{ "file":"/%s", "line":1, "code":"%s"}""" fileName
     |> TextRequest
   Http.RequestString(host + "/eval", httpMethod = "POST", body = body)
   |> FsiEval.Parse
