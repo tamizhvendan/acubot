@@ -15,7 +15,7 @@ let parseRequest (input : System.String) =
   match rawType with
   | "GET" -> {HttpMethod = Get; Path = route}
   | "POST" -> {HttpMethod = Post; Path = route}
-  | "PUT" -> {HttpMethod = Post; Path = route}
+  | "PUT" -> {HttpMethod = Put; Path = route}
   | _ -> failwith "invalid request"
 
 let server text =
