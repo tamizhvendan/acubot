@@ -29,7 +29,7 @@ let evalInteraction content =
     else Success ()
 
 let evalExpression content =
-    let res,errs = fsi.EvalExpressionNonThrowing "asserts"
+    let res,errs = fsi.EvalExpressionNonThrowing content
     if errs.Length > 0 then 
         errs 
         |> Array.map (fun e -> e.Message) 

@@ -30,6 +30,14 @@ open Steps
 
 let runAssert = function
 | Compiler content -> evalInteraction content
+| Expression (content, expected) -> 
+  match evalExpression content with
+  | Success value -> 
+    match value with
+    | Some v -> 
+      v.ReflectionValue |> printfn "%A" |> Success
+    | None -> Success ()
+  | Error msg -> Error msg
 
 let rec runAsserts xs =
   match xs with
@@ -49,4 +57,4 @@ let executeStep step =
     | Error msg -> printfn "%s" msg
   | Error msg -> printfn "%s" msg
 
-steps |> List.item 0 |> executeStep
+steps |> List.item 1 |> executeStep
