@@ -1,120 +1,41 @@
-#r "packages/FSharp.Data/lib/net40/FSharp.Data.dll"
+#r "packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
 
-open FSharp.Data
+open Microsoft.FSharp.Compiler.Interactive.Shell
+open Microsoft.FSharp.Compiler
+open System.IO
+open System.Text
 
-[<Literal>]
-let OutputJson = """
-  {
-    "result": "output",
-    "output": "\r\nF# Interactive for F# 4.0 (private)\r\nFreely dist...",
-    "details": null
-  }
-"""
-type FsiOutput = JsonProvider<OutputJson>
+let sbOut = StringBuilder()
+let sbErr = StringBuilder()
 
-let output host =
-  Http.RequestString (host + "/output", httpMethod = "POST")
-  |> FsiOutput.Parse
+let fsiPath = "./packages/FSharp.Compiler.Tools/tools/fsi.exe"
 
+let fsi =
+    let inStream = new StringReader("")
+    let outStream = new StringWriter(sbOut)
+    let errStream = new StringWriter(sbErr)
+    let fsiConfig = FsiEvaluationSession.GetDefaultConfiguration()
+    let argv = [|fsiPath|]
+    FsiEvaluationSession.Create(fsiConfig, argv, inStream, outStream, errStream)
 
-let (|Success|Error|Exception|Unknown|) = function
-| "success" -> Success
-| "error" -> Error
-| "exception" -> Exception
-| _ -> Unknown
-
-type EvalSuccess = {
-  Output : string
-  Details : string
-}
-
-type EvalError = {
-  FileName : string
-  Start : int
-  End : int
-  Line : int
-  Message : string
-}
-
-type EvalException = {
-  Details : string
-}
-
-type Result =
-| EvalSuccess of EvalSuccess
-| EvalErrors of EvalError list
-| EvalException of EvalException
-| Unknown
+type Result<'T, 'E> =
+| Success of 'T
+| Error of 'E
 
 
-[<Literal>]
-let EvalJson = """[{
-    "result": "success",
-    "output": "val it : int = 2\r\n",
-    "details": {
-      "string": "test",
-      "html": null,
-      "warnings": []
-    }
-  },{
-    "result": "error",
-    "output": "Stopped due to error\n",
-    "details": [
-      {
-        "startLine": 10,
-        "endLine": 10,
-        "startColumn": 2,
-        "endColumn": 5,
-        "fileName": "/a.fsx",
-        "severity": "error",
-        "errorNumber": 1,
-        "message": "The type 'float' does not match the type 'int'"
-      }]
-  }, {
-    "result": "exception",
-    "output": "",
-    "details": "System.Exception: Oops!\r\n   at <StartupCode$FSI_00..."
-  }]
-"""
+let evalInteraction content = 
+    let _, errs = fsi.EvalInteractionNonThrowing content
+    if errs.Length > 0 then sprintf "%A" errs |> Error 
+    else Success ()
 
-type FsiEval = JsonProvider<EvalJson, SampleIsList=true>
-
-let toResult (fsiEval : FsiEval.Root) =
-  match fsiEval.Result with
-  | Success ->
-    let output =
-      match fsiEval.Output with
-      | Some output -> output
-      | _ -> ""
-    let details =
-      match fsiEval.Details.Record with
-      | Some d -> d.String
-      | _ -> ""
-    EvalSuccess {Output = output; Details = details}
-  | Error ->
-    match fsiEval.Details.Array with
-    | Some errors ->
-      errors
-      |> Array.map (fun e -> {
-                              FileName = e.FileName
-                              Start = e.StartColumn
-                              End = e.EndColumn
-                              Line = e.StartLine
-                              Message = e.Message
-                            })
-      |> Array.toList |> EvalErrors
-    | _ -> EvalErrors []
-  | Exception ->
-    match fsiEval.Details.String with
-    | Some v -> { Details = v} |> EvalException
-    | None -> {Details = ""} |> EvalException
-  | _ -> Unknown
-
-let eval fileName host (content : string) =
-  let body =
-    content.Replace("\"", "\\\"")
-    |> sprintf """{ "file":"/%s", "line":1, "code":"%s"}""" fileName
-    |> TextRequest
-  Http.RequestString(host + "/eval", httpMethod = "POST", body = body)
-  |> FsiEval.Parse
-  |> toResult
+let evalExpression content =
+    let res,errs = fsi.EvalExpressionNonThrowing "asserts"
+    if errs.Length > 0 then 
+        errs 
+        |> Array.map (fun e -> e.Message) 
+        |> Array.reduce (fun v1 v2 -> v1 + "," + v2)
+        |> Error
+    else 
+        match res with
+        | Choice1Of2 x -> Success x
+        | Choice2Of2 ex -> Error ex.Message 
