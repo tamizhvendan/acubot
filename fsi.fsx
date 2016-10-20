@@ -10,31 +10,38 @@ let sbErr = StringBuilder()
 
 let fsiPath = "./packages/FSharp.Compiler.Tools/tools/fsi.exe"
 
-let fsi =
+let fsi () =
     let inStream = new StringReader("")
     let outStream = new StringWriter(sbOut)
     let errStream = new StringWriter(sbErr)
     let fsiConfig = FsiEvaluationSession.GetDefaultConfiguration()
     let argv = [|fsiPath|]
-    FsiEvaluationSession.Create(fsiConfig, argv, inStream, outStream, errStream)
+    FsiEvaluationSession.Create(fsiConfig, argv, inStream, outStream, errStream, collectible=true)
 
 type Result<'T, 'E> =
 | Success of 'T
 | Error of 'E
 
+let transformErrMsg (err : FSharpErrorInfo) =
+  printfn "%s" err.Message
+  err.Message
 
-let evalInteraction content = 
+let reduceErrMsg (errs : FSharpErrorInfo[]) =
+  errs 
+  |> Array.map transformErrMsg
+  |> Array.reduce (fun v1 v2 -> v1 + "," + v2)
+  |> Error
+
+let evalInteraction (fsi : FsiEvaluationSession) content = 
     let _, errs = fsi.EvalInteractionNonThrowing content
-    if errs.Length > 0 then sprintf "%A" errs |> Error 
+    if errs.Length > 0 then 
+      reduceErrMsg errs
     else Success ()
 
-let evalExpression content =
+let evalExpression (fsi : FsiEvaluationSession) content =
     let res,errs = fsi.EvalExpressionNonThrowing content
     if errs.Length > 0 then 
-        errs 
-        |> Array.map (fun e -> e.Message) 
-        |> Array.reduce (fun v1 v2 -> v1 + "," + v2)
-        |> Error
+        reduceErrMsg errs
     else 
         match res with
         | Choice1Of2 x -> Success x

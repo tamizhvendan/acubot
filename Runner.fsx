@@ -28,33 +28,43 @@ open Steps
 
 //let runnerStep = environVarOrDefault "RUNNER_STEP" "1" |> int
 
-let runAssert = function
-| Compiler content -> evalInteraction content
+let runAssert fsi = function
+| Compiler content -> evalInteraction fsi content
+| Compiler2 (content, errorMsg) ->
+  match evalInteraction fsi content with
+  | Success v -> Success v
+  | Error _ -> Error errorMsg
 | Expression (content, expected) -> 
-  match evalExpression content with
+  match evalExpression fsi content with
   | Success value -> 
     match value with
     | Some v -> 
-      v.ReflectionValue |> printfn "%A" |> Success
+      let actual = v.ReflectionValue |> sprintf "%A" 
+      if actual = expected then
+       Success () 
+      else
+        sprintf "Expected %s but found %s" expected actual |> Error
     | None -> Success ()
   | Error msg -> Error msg
 
-let rec runAsserts xs =
+let rec runAsserts fsi xs =
   match xs with
   | [] -> Success ()
   | x :: xs ->
-    match runAssert x with
-    | Success _ -> runAsserts xs
+    match runAssert fsi x with
+    | Success _ -> runAsserts fsi xs
     | Error msg -> Error msg
 let executeStep step =
-  match evalInteraction """ #load "MiniSuave.fsx";;  """ with
+  use fsi = fsi()
+  match evalInteraction fsi """ #load "MiniSuave.fsx";;  """ with
   | Success _ -> 
-    match evalInteraction """ open MiniSuave;; """ with
+    match evalInteraction fsi """ open MiniSuave;; """ with
     | Success _ -> 
-      match runAsserts step.Asserts with
+      match runAsserts fsi step.Asserts with
       | Success _ -> printfn "%s" step.Greeting
       | Error msg -> printfn "%s" msg
     | Error msg -> printfn "%s" msg
   | Error msg -> printfn "%s" msg
+  
 
-steps |> List.item 1 |> executeStep
+steps |> List.item 2 |> executeStep

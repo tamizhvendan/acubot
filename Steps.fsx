@@ -1,5 +1,6 @@
 type Assert =
 | Compiler of string
+| Compiler2 of string * string
 | Expression of string * string
 
 type Step ={
@@ -7,6 +8,14 @@ type Step ={
   Greeting : string
   Asserts : Assert list
 }
+
+let recordErrMsg name labels =
+  labels 
+  |> List.map (fun (label, type') -> sprintf "`%s`(of type %s)" label type')
+  |> List.reduce (fun v1 v2 -> v1 + "," + v2)
+  |> sprintf "The Record type `%s` should contain labels: %s" name
+
+let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
 
 let steps  = [
   {
@@ -17,6 +26,15 @@ let steps  = [
   {
     Description = "Create a Pair Type to representing `Header`"
     Greeting = "Superb!"
-    Asserts = [Compiler ("""let header : Header = ("foo", "bar")"""); Expression ("header", "")]
+    Asserts = 
+      [ Compiler2 ("""let header : Header = ("foo", "bar")""", "The type `Header` should be of type 'string * string'") 
+        Expression ("header", """("foo", "bar")""")]
+  }
+  {
+    Description = "Create a Record type `Request`"
+    Greeting = "Keep going!"
+    Asserts = 
+      [Compiler2 (req "test" "Get", 
+          recordErrMsg "Request" [("Path","string"); ("Headers", "Header list"); ("HttpMethod", "HttpMethod")])]
   }
 ]

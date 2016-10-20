@@ -2,4 +2,10 @@
 
 type HttpMethod = Get | Put | Delete | Post
 
-type Header = string
+type Header = string * string
+
+type Request = {
+  Path : string
+  Headers : Header list
+  HttpMethod : HttpMethod
+}
