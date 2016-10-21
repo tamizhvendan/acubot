@@ -37,4 +37,9 @@ let steps  = [
       [Compiler2 (req "test" "Get", 
           recordErrMsg "Request" [("Path","string"); ("Headers", "Header list"); ("HttpMethod", "HttpMethod")])]
   }
+  {
+    Description = "Create a Discrimintated Union Type to represent `StatusCode`"
+    Greeting = "That's amazing!"
+    Asserts = [Compiler "StatusCode.Ok"; Compiler "NotFound"; Compiler "BadRequest"]
+  }
 ]

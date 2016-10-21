@@ -1,6 +1,10 @@
 // Show your Awesomeness!
 
-type HttpMethod = Get | Put | Delete | Post
+type HttpMethod = 
+| Get 
+| Put 
+| Delete 
+| Post
 
 type Header = string * string
 
@@ -9,3 +13,8 @@ type Request = {
   Headers : Header list
   HttpMethod : HttpMethod
 }
+
+type StatusCode =
+| Ok
+| BadRequest
+| NotFound

@@ -66,5 +66,5 @@ let executeStep step =
     | Error msg -> printfn "%s" msg
   | Error msg -> printfn "%s" msg
   
-
-steps |> List.item 2 |> executeStep
+let execute stepCount =
+  steps |> List.item stepCount |> executeStep
