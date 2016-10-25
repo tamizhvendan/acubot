@@ -16,6 +16,8 @@ let recordErrMsg name labels =
   |> sprintf "The Record type `%s` should contain labels: %s" name
 
 let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
+let res = sprintf """{Content = "%s"; Headers = [("foo", "bar")]; StatusCode= %s}"""
+let ctx = sprintf """{Request = %s; Response = %s}"""
 
 let steps  = [
   {
@@ -41,5 +43,19 @@ let steps  = [
     Description = "Create a Discrimintated Union Type to represent `StatusCode`"
     Greeting = "That's amazing!"
     Asserts = [Compiler "StatusCode.Ok"; Compiler "NotFound"; Compiler "BadRequest"]
+  }
+  {
+    Description = "Create a Record type `Response`"
+    Greeting = "Awesome!"
+    Asserts = 
+      [Compiler2 (res "test" "Ok", 
+          recordErrMsg "Response" [("Content","string"); ("Headers", "Header list"); ("StatusCode", "StatusCode")])]
+  }
+  {
+    Description = "Create a Record type `Context`"
+    Greeting = "Brilliant!"
+    Asserts = 
+      [Compiler2 (ctx (req "test" "Get") (res "test" "Ok"), 
+          recordErrMsg "Context" [("Request","Request"); ("Response", "Response")])]
   }
 ]

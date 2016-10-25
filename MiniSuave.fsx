@@ -18,3 +18,14 @@ type StatusCode =
 | Ok
 | BadRequest
 | NotFound
+
+type Response = {
+  Content : string
+  Headers : Header list
+  StatusCode : StatusCode
+}
+
+type Context = {
+  Request : Request
+  Response : Response
+}
