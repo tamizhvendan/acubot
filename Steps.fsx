@@ -15,9 +15,26 @@ let recordErrMsg name labels =
   |> List.reduce (fun v1 v2 -> v1 + "," + v2)
   |> sprintf "The Record type `%s` should contain labels: %s" name
 
+let runWebPart = """
+  let run webpart =
+    let req = {HttpMethod = Get; Path = "/"; Headers = []}
+    let res = {StatusCode = NotFound; Content = ""; Headers = []}
+    let ctx = {Request = req; Response = res}
+    let result = webpart ctx |> Async.RunSynchronously
+    match result  with
+    | Some ctx ->
+      sprintf "[%A]:%A" ctx.Response.StatusCode ctx.Response.Content 
+    | None ->
+       "<Empty Response>"
+"""
+
 let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
 let res = sprintf """{Content = "%s"; Headers = [("foo", "bar")]; StatusCode= %s}"""
+
+let rawRes s1 s2 = 
+  (sprintf """"[%s]:"%s"" """ s1 s2).TrimEnd()
 let ctx = sprintf """{Request = %s; Response = %s}"""
+
 
 let steps  = [
   {
@@ -57,5 +74,21 @@ let steps  = [
     Asserts = 
       [Compiler2 (ctx (req "test" "Get") (res "test" "Ok"), 
           recordErrMsg "Context" [("Request","Request"); ("Response", "Response")])]
+  }
+  {
+    Description = "Model `WebPart`"
+    Greeting = "Incredible!"
+    Asserts = 
+      [Compiler2 ("let _ : WebPart = fun ctx -> ctx |> Some |> async.Return", "WebPart should be of type `Context -> Async<Context option>`") ]
+  }
+  {
+    Description = "Define our first Combinator `OK`"
+    Greeting = "Wonderful!"
+    Asserts = 
+      [Compiler2("""let _ : WebPart = OK "test";;""",
+                  "The `OK` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression("""run (OK "test")""",rawRes "Ok" "test")
+      ]
   }
 ]
