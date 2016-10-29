@@ -1,3 +1,3 @@
 #load "Runner.fsx"
 
-Runner.execute 7
+Runner.execute 10

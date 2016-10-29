@@ -91,4 +91,43 @@ let steps  = [
        Expression("""run (OK "test")""",rawRes "Ok" "test")
       ]
   }
+  {
+    Description = "Define `NOT_FOUND` Combinator"
+    Greeting = "Nice.."
+    Asserts = 
+      [Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
+                  "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression("""run (NOT_FOUND "test")""",rawRes "NotFound" "test")
+      ]
+  }
+  {
+    Description = "Define `BAD_REQUEST` Combinator"
+    Greeting = "Cool"
+    Asserts = 
+      [Compiler2("""let _ : WebPart = BAD_REQUEST "test";;""",
+                  "The `BAD_REQUEST` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test")
+      ]
+  }
+  {
+    Description = "It's time for refactoring"
+    Greeting = "Great.."
+    Asserts = 
+      [Compiler2("""let _ : WebPart = response Ok "test";;""",
+                  "The `response` function signature should be `StatusCode -> string -> Context -> Async<Context option>`")      
+       Compiler2("""let _ : WebPart = OK "test";;""",
+                  "The `OK` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler2("""let _ : WebPart = BAD_REQUEST "test";;""",
+                  "The `BAD_REQUEST` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
+                  "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression("""run (response Ok "test")""",rawRes "Ok" "test")
+       Expression("""run (OK "test")""",rawRes "Ok" "test")
+       Expression("""run (NOT_FOUND "test")""",rawRes "NotFound" "test")
+       Expression("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test")
+      ]
+  }
 ]

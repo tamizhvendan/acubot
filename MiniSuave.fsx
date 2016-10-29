@@ -32,9 +32,13 @@ type Context = {
 
 type WebPart = Context -> Async<Context option>
 
-let OK content ctx = 
+let response statusCode content ctx =
   let response = 
     {ctx.Response with 
-      StatusCode = Ok
+      StatusCode = statusCode
       Content = content}  
   {ctx with Response = response} |> Some |> async.Return
+
+let OK = response Ok
+let BAD_REQUEST = response BadRequest
+let NOT_FOUND = response NotFound 
