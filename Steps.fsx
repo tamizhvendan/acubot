@@ -25,14 +25,20 @@ let runWebPart = """
     | Some ctx ->
       sprintf "[%A]:%A" ctx.Response.StatusCode ctx.Response.Content 
     | None ->
-       "<Empty Response>"
+       "<Empty>"
 """
+
+let runWebPart2 httpMethod = runWebPart.Replace("Get", httpMethod) 
+
 
 let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
 let res = sprintf """{Content = "%s"; Headers = [("foo", "bar")]; StatusCode= %s}"""
 
 let rawRes s1 s2 = 
   (sprintf """"[%s]:"%s"" """ s1 s2).TrimEnd()
+
+let emptyRes = (""""<Empty>" """).TrimEnd()
+
 let ctx = sprintf """{Request = %s; Response = %s}"""
 
 
@@ -128,6 +134,18 @@ let steps  = [
        Expression("""run (OK "test")""",rawRes "Ok" "test")
        Expression("""run (NOT_FOUND "test")""",rawRes "NotFound" "test")
        Expression("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test")
+      ]
+  }
+  {
+    Description = "Define `Get` Filter"
+    Greeting = "Wonderful"
+    Asserts = 
+      [Compiler2("""let _ : WebPart = GET;;""",
+                  "The `GET` function signature should be `Context -> Async<Context option>`")
+       Compiler(runWebPart2 "Post")
+       Expression("""run GET""",emptyRes)
+       Compiler(runWebPart)
+       Expression("""run GET""",rawRes "NotFound" "")
       ]
   }
 ]

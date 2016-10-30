@@ -41,4 +41,9 @@ let response statusCode content ctx =
 
 let OK = response Ok
 let BAD_REQUEST = response BadRequest
-let NOT_FOUND = response NotFound 
+let NOT_FOUND = response NotFound
+
+let GET ctx = 
+  match ctx.Request.HttpMethod = Get with
+  | true -> ctx |> Some |> async.Return 
+  | _ -> None |> async.Return
