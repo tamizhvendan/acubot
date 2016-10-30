@@ -27,8 +27,10 @@ let runWebPart = """
     | None ->
        "<Empty>"
 """
-
 let runWebPart2 httpMethod = runWebPart.Replace("Get", httpMethod) 
+
+
+  
 
 
 let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
@@ -40,7 +42,14 @@ let rawRes s1 s2 =
 let emptyRes = (""""<Empty>" """).TrimEnd()
 
 let ctx = sprintf """{Request = %s; Response = %s}"""
-
+let filterAsserts webPart httpMethod negativeHttpMethod = 
+  [Compiler2(sprintf """let _ : WebPart = %s;;""" webPart, 
+      sprintf "The `%s` function signature should be `Context -> Async<Context option>`" webPart)
+   Compiler(runWebPart2 negativeHttpMethod)
+   Expression("""run """ + webPart,emptyRes)
+   Compiler(runWebPart2 httpMethod)
+   Expression("""run """ + webPart,rawRes "NotFound" "")
+  ]
 
 let steps  = [
   {
@@ -137,15 +146,23 @@ let steps  = [
       ]
   }
   {
-    Description = "Define `Get` Filter"
+    Description = "Define `GET` Filter"
     Greeting = "Wonderful"
-    Asserts = 
-      [Compiler2("""let _ : WebPart = GET;;""",
-                  "The `GET` function signature should be `Context -> Async<Context option>`")
-       Compiler(runWebPart2 "Post")
-       Expression("""run GET""",emptyRes)
-       Compiler(runWebPart)
-       Expression("""run GET""",rawRes "NotFound" "")
-      ]
+    Asserts = filterAsserts "GET" "Get" "Post"      
+  }
+  {
+    Description = "Define `POST` Filter"
+    Greeting = "Superb"
+    Asserts = filterAsserts "POST" "Post" "Get"      
+  }
+  {
+    Description = "Define `PUT` Filter"
+    Greeting = "Keep Going!"
+    Asserts = filterAsserts "PUT" "Put" "Get"      
+  }
+  {
+    Description = "Define `DELETE` Filter"
+    Greeting = "That's amazing!"
+    Asserts = filterAsserts "DELETE" "Delete" "Get"      
   }
 ]
