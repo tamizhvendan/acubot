@@ -28,13 +28,7 @@ open Steps
 
 //let runnerStep = environVarOrDefault "RUNNER_STEP" "1" |> int
 
-let runAssert fsi = function
-| Compiler content -> evalInteraction fsi content
-| Compiler2 (content, errorMsg) ->
-  match evalInteraction fsi content with
-  | Success v -> Success v
-  | Error _ -> Error errorMsg
-| Expression (content, expected) -> 
+let assertExpression fsi content expected =
   match evalExpression fsi content with
   | Success value -> 
     match value with
@@ -46,6 +40,19 @@ let runAssert fsi = function
         sprintf "Expected %s but found %s" expected actual |> Error
     | None -> Success ()
   | Error msg -> Error msg
+
+let runAssert fsi = function
+| Compiler content -> evalInteraction fsi content
+| Compiler2 (content, errorMsg) ->
+  match evalInteraction fsi content with
+  | Success v -> Success v
+  | Error _ -> Error errorMsg
+| Expression (content, expected) -> 
+  assertExpression fsi content expected  
+| Expression2 (content, expected, errMsg) ->
+  match assertExpression fsi content expected with
+  | Success _ -> Success ()
+  | Error msg -> Error (sprintf "[Assertion (%s) failed] : %s" errMsg msg)
 
 let rec runAsserts fsi xs =
   match xs with

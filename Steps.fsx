@@ -2,6 +2,7 @@ type Assert =
 | Compiler of string
 | Compiler2 of string * string
 | Expression of string * string
+| Expression2 of string * string * string
 
 type Step ={
   Description : string
@@ -46,9 +47,9 @@ let filterAsserts webPart httpMethod negativeHttpMethod =
   [Compiler2(sprintf """let _ : WebPart = %s;;""" webPart, 
       sprintf "The `%s` function signature should be `Context -> Async<Context option>`" webPart)
    Compiler(runWebPart2 negativeHttpMethod)
-   Expression("""run """ + webPart,emptyRes)
+   Expression2("""run """ + webPart,emptyRes, webPart)
    Compiler(runWebPart2 httpMethod)
-   Expression("""run """ + webPart,rawRes "NotFound" "")
+   Expression2("""run """ + webPart,rawRes "NotFound" "", webPart)
   ]
 
 let steps  = [
@@ -103,7 +104,7 @@ let steps  = [
       [Compiler2("""let _ : WebPart = OK "test";;""",
                   "The `OK` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
-       Expression("""run (OK "test")""",rawRes "Ok" "test")
+       Expression2("""run (OK "test")""",rawRes "Ok" "test", "OK")
       ]
   }
   {
@@ -113,7 +114,7 @@ let steps  = [
       [Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
                   "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
-       Expression("""run (NOT_FOUND "test")""",rawRes "NotFound" "test")
+       Expression2("""run (NOT_FOUND "test")""",rawRes "NotFound" "test", "NOT_FOUND")
       ]
   }
   {
@@ -123,7 +124,7 @@ let steps  = [
       [Compiler2("""let _ : WebPart = BAD_REQUEST "test";;""",
                   "The `BAD_REQUEST` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
-       Expression("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test")
+       Expression2("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test", "BAD_REQUEST")
       ]
   }
   {
@@ -139,10 +140,10 @@ let steps  = [
        Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
                   "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
-       Expression("""run (response Ok "test")""",rawRes "Ok" "test")
-       Expression("""run (OK "test")""",rawRes "Ok" "test")
-       Expression("""run (NOT_FOUND "test")""",rawRes "NotFound" "test")
-       Expression("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test")
+       Expression2("""run (response Ok "test")""",rawRes "Ok" "test", "response function")
+       Expression2("""run (OK "test")""",rawRes "Ok" "test", "OK")
+       Expression2("""run (NOT_FOUND "test")""",rawRes "NotFound" "test", "NOT_FOUND")
+       Expression2("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test", "BAD_REQUEST")
       ]
   }
   {
@@ -172,7 +173,7 @@ let steps  = [
       [Compiler2("""let t : WebPart = httpMethodFilter Get;;""",
                   "The `httpMethodFilter` function signature should be `Context -> Async<Context option>`")
        Compiler(runWebPart)
-       Expression("run t",rawRes "NotFound" "")
+       Expression2("run t",rawRes "NotFound" "", "httpMethodFilter")
        ] @ (filterAsserts "GET" "Get" "Post")
        @ (filterAsserts "POST" "Post" "Get" )
        @ (filterAsserts "PUT" "Put" "Get")
