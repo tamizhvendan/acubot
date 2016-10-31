@@ -42,22 +42,16 @@ let response statusCode content ctx =
 let OK = response Ok
 let BAD_REQUEST = response BadRequest
 let NOT_FOUND = response NotFound
-let GET ctx = 
-  match ctx.Request.HttpMethod = Get with
-  | true -> ctx |> Some |> async.Return 
+
+let httpMethodFilter httpMethod ctx =
+  match ctx.Request.HttpMethod = httpMethod with
+  | true -> Some ctx |> async.Return
   | _ -> None |> async.Return
 
-let POST ctx = 
-  match ctx.Request.HttpMethod = Post with
-  | true -> ctx |> Some |> async.Return 
-  | _ -> None |> async.Return
+let GET = httpMethodFilter Get 
 
-let PUT ctx = 
-  match ctx.Request.HttpMethod = Put with
-  | true -> ctx |> Some |> async.Return 
-  | _ -> None |> async.Return
+let POST = httpMethodFilter Post
 
-let DELETE ctx = 
-  match ctx.Request.HttpMethod = Delete with
-  | true -> ctx |> Some |> async.Return 
-  | _ -> None |> async.Return
+let PUT = httpMethodFilter Put
+
+let DELETE = httpMethodFilter Delete

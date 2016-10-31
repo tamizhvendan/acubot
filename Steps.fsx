@@ -165,4 +165,17 @@ let steps  = [
     Greeting = "That's amazing!"
     Asserts = filterAsserts "DELETE" "Delete" "Get"      
   }
+  {
+    Description = "Refactor Filter WebParts"
+    Greeting = "You are awesome!"
+    Asserts = 
+      [Compiler2("""let t : WebPart = httpMethodFilter Get;;""",
+                  "The `httpMethodFilter` function signature should be `Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression("run t",rawRes "NotFound" "")
+       ] @ (filterAsserts "GET" "Get" "Post")
+       @ (filterAsserts "POST" "Post" "Get" )
+       @ (filterAsserts "PUT" "Put" "Get")
+       @ (filterAsserts "DELETE" "Delete" "Put")
+  }
 ]
