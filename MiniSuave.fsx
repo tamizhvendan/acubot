@@ -55,3 +55,19 @@ let POST = httpMethodFilter Post
 let PUT = httpMethodFilter Put
 
 let DELETE = httpMethodFilter Delete
+
+let Path path ctx = 
+  match ctx.Request.Path = path with
+  | true -> ctx |> Some |> async.Return
+  | _ -> None |> async.Return
+
+let compose w1 w2 ctx = async {
+  let! result = w1 ctx
+  match result with
+  | Some c -> 
+    let! res = w2 c
+    return res
+  | None -> return None 
+}
+
+let (>=>) = compose

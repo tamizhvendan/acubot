@@ -18,7 +18,7 @@ let recordErrMsg name labels =
 
 let runWebPart = """
   let run webpart =
-    let req = {HttpMethod = Get; Path = "/"; Headers = []}
+    let req = {HttpMethod = Get; Path = "/test"; Headers = []}
     let res = {StatusCode = NotFound; Content = ""; Headers = []}
     let ctx = {Request = req; Response = res}
     let result = webpart ctx |> Async.RunSynchronously
@@ -28,12 +28,7 @@ let runWebPart = """
     | None ->
        "<Empty>"
 """
-let runWebPart2 httpMethod = runWebPart.Replace("Get", httpMethod) 
-
-
-  
-
-
+let runWebPart2 httpMethod = runWebPart.Replace("Get", httpMethod)
 let req = sprintf """{Path = "%s"; Headers = [("foo", "bar")]; HttpMethod= %s}"""
 let res = sprintf """{Content = "%s"; Headers = [("foo", "bar")]; StatusCode= %s}"""
 
@@ -51,6 +46,17 @@ let filterAsserts webPart httpMethod negativeHttpMethod =
    Compiler(runWebPart2 httpMethod)
    Expression2("""run """ + webPart,rawRes "NotFound" "", webPart)
   ]
+
+let composeAssets fname = 
+       [Compiler2(sprintf """let t : WebPart = %s (OK "foo") (OK "bar") ;;"""  fname,
+                  sprintf  "The `%s` function signature should be `WebPart -> WebPart -> Context -> Async<Context option>`" fname)
+        Compiler(runWebPart)
+        Expression2("run t",rawRes "Ok" "bar", fname)
+        Compiler(sprintf """let x = %s POST (OK "bar")""" fname)
+        Expression2("run x", emptyRes, fname)
+        Compiler(sprintf """let y = %s (OK "bar") GET""" fname)
+        Expression2("run y", rawRes "Ok" "bar", fname)]
+        
 
 let steps  = [
   {
@@ -178,5 +184,24 @@ let steps  = [
        @ (filterAsserts "POST" "Post" "Get" )
        @ (filterAsserts "PUT" "Put" "Get")
        @ (filterAsserts "DELETE" "Delete" "Put")
+  }
+  {
+    Description = "Define `Path` filter"
+    Greeting = "Well done!"
+    Asserts = 
+      [Compiler2("""let t : WebPart = Path "/test";;""",
+                  "The `Path` function signature should be `string -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression2("run t",rawRes "NotFound" "", "Path")]
+  }
+  {
+    Description = "Define `componse` function"
+    Greeting = "Wow!"
+    Asserts = composeAssets "compose"
+  }
+  {
+    Description = "Define `>=>` function"
+    Greeting = "Cool :-)"
+    Asserts = composeAssets "(>=>)"
   }
 ]
