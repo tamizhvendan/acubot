@@ -62,7 +62,7 @@ let steps  = [
   {
     Description = "Create a Discrimintated Union Type to represent `HttpMethod`"
     Greeting = "That's a good start!"
-    Asserts = [Compiler "HttpMethod.Get"; Compiler "Put"; Compiler "Delete"; Compiler "Post"]
+    Asserts = [Compiler2 ("HttpMethod.Get","'HttpMethod'(Get) is not defined"); Compiler "Put"; Compiler "Delete"; Compiler "Post"]
   }
   {
     Description = "Create a Pair Type to representing `Header`"
