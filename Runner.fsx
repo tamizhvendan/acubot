@@ -1,5 +1,5 @@
-//#r "packages/FAKE/tools/FakeLib.dll"
-//open Fake
+#r "packages/FAKE/tools/FakeLib.dll"
+open Fake
 #load "Fsi.fsx"
 open Fsi
 
@@ -24,9 +24,6 @@ open Steps
 //      Show the error
 //      Recurse to file change
 
-
-
-//let runnerStep = environVarOrDefault "RUNNER_STEP" "1" |> int
 
 let assertExpression fsi content expected =
   match evalExpression fsi content with
@@ -68,10 +65,16 @@ let executeStep step =
     match evalInteraction fsi """ open MiniSuave;; """ with
     | Success _ -> 
       match runAsserts fsi step.Asserts with
-      | Success _ -> printfn "%s" step.Greeting
-      | Error msg -> printfn "%s" msg
-    | Error msg -> printfn "%s" msg
-  | Error msg -> printfn "%s" msg
+      | Success _ -> tracefn "%s" step.Greeting; true
+      | Error msg -> traceError msg; false
+    | Error msg -> traceError msg; false
+  | Error msg -> traceError msg; false
   
 let execute stepCount =
   steps |> List.item stepCount |> executeStep
+
+let printStep currentStep =
+  let step = steps |> List.item currentStep
+  tracefn "[%d of %d] %s" (currentStep+1) steps.Length step.Description
+
+let totalSteps = steps.Length
