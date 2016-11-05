@@ -3,7 +3,7 @@
 open MiniSuave
 open Test
 
-let handlers = 
+let app =
   Choose[
     GET >=> Choose [
       Path "/hello" >=> OK "hello"
@@ -11,5 +11,3 @@ let handlers =
     ]
     POST >=> Path "/hello" >=> OK "hello POST"
   ]
-
-let app req = server req handlers
