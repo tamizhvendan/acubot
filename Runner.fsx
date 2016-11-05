@@ -75,6 +75,6 @@ let execute stepCount =
 
 let printStep currentStep =
   let step = steps |> List.item currentStep
-  tracefn "[%d of %d] %s" (currentStep+1) steps.Length step.Description
+  traceFAKE "[%d of %d] %s" (currentStep+1) steps.Length step.Description
 
 let totalSteps = steps.Length

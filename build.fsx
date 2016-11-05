@@ -9,6 +9,7 @@ let runnerStepEnvVariable = "RUNNER_STEP"
 
 let isInit = ref false
 let runnerStep = ref 0
+let fileContent = ref ""
 let getRunnerStep () = 
   let value = environVarOrDefault runnerStepEnvVariable "1"
   match Int32.TryParse value with
@@ -32,11 +33,15 @@ let executeRunner () =
   | _ -> ()
 let watch () =
   use watcher = !! fileName |> WatchChanges (fun changes ->
+    let fc = changes |> Seq.head
+    let content = fc.FullPath |> System.IO.File.ReadAllText
+    if content <> !fileContent then
       printfn "compiling..."
-      executeRunner ()      
+      executeRunner ()
+      fileContent := content      
   )
   if !isInit then 
-    tracefn "Welcome to MiniSuave Workshop"
+    traceFAKE "Welcome to MiniSuave Workshop"
     let currentStep = getRunnerStep()
     Runner.printStep currentStep
     runnerStep := currentStep
