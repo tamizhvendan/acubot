@@ -23,7 +23,6 @@ type Result<'T, 'E> =
 | Error of 'E
 
 let transformErrMsg (err : FSharpErrorInfo) =
-  printfn "%s" err.Message
   err.Message
 
 let reduceErrMsg (errs : FSharpErrorInfo[]) =

@@ -195,7 +195,7 @@ let steps  = [
        Expression2("run t",rawRes "NotFound" "", "Path")]
   }
   {
-    Description = "Define `componse` function"
+    Description = "Define `compose` function"
     Greeting = "Wow!"
     Asserts = composeAssets "compose"
   }
@@ -203,5 +203,16 @@ let steps  = [
     Description = "Define `>=>` function"
     Greeting = "Cool :-)"
     Asserts = composeAssets "(>=>)"
+  }
+  {
+    Description = "Define `Choose` function"
+    Greeting = "That's it! Well done :-)"
+    Asserts = 
+      [Compiler2("""let t : WebPart = Choose [GET >=> OK "GET"; POST >=> OK "POST"];;""",
+                  "The `Choose` function signature should be `WebPart list -> Context -> Async<Context option>`")
+       Compiler(runWebPart)
+       Expression2("run t",rawRes "Ok" "GET", "Choose")
+       Compiler(runWebPart2 "Post")
+       Expression2("run t",rawRes "Ok" "POST", "Choose")]
   }
 ]

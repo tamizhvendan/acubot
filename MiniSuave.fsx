@@ -71,3 +71,13 @@ let compose w1 w2 ctx = async {
 }
 
 let (>=>) = compose
+
+let rec Choose webparts ctx = async {
+  match webparts with
+  | [] -> return None
+  | x :: xs ->
+    let! result = x ctx
+    match result with
+    | Some c -> return Some c
+    | None -> return! Choose xs ctx
+}
