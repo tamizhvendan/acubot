@@ -46,7 +46,7 @@ let introMsg () =
   else
     username := name
   green <| sprintf "Hello %s, Pleasure meeting you! Let's get started on Mission: MiniSuave." !username
-  Runner.goToNext()
+  Runner.goToNext 0
   ()
 
 let executeRunner () =
@@ -62,6 +62,7 @@ let watch () =
     let fc = changes |> Seq.head
     let content = fc.FullPath |> System.IO.File.ReadAllText
     if content <> !fileContent then
+      printfn ""
       yellow  <| "%s" <| pickRandomMessage msgsForCompilation
       executeRunner ()
       fileContent := content      

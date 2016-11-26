@@ -66,15 +66,22 @@ let runAssert fsi = function
 let personalise username (message : string) = 
   message.Replace("%s", username)
 
-let inline goToNext () =
+let inline goToNext step =
   printfn ""
-  let rec prompt () =
-    yellow "« Type next to continue »"
-    white "λ "
+  let rec prompt printNextStep =
+    match printNextStep, step with
+    | true, 0 -> 
+      yellow "« Type next to continue »"
+      white "[Intro] λ "
+    | true, _ ->         
+      yellow "« Type next to continue »"
+      white "[Challenge %d] λ " step
+    | _ -> ()        
     let command : string = Console.ReadLine()
-    if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then () 
-    else prompt ()
-  prompt ()
+    if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()
+    else if command.Trim() = "" then prompt false
+    else prompt true
+  prompt true
 let rec runAsserts fsi xs =
   match xs with
   | [] -> Success ()
@@ -82,7 +89,7 @@ let rec runAsserts fsi xs =
     match runAssert fsi x with
     | Success _ -> runAsserts fsi xs
     | Error msg -> Error msg
-let executeStep username step =
+let executeStep stepCount username step =
   use fsi = fsi()
   match evalInteraction fsi """ #load "MiniSuave.fsx";;  """ with
   | Success _ -> 
@@ -94,13 +101,13 @@ let executeStep username step =
         pickRandomMessage step.Appreciations
         |> personalise username
         |> green  
-        goToNext(); true
-      | Error msg -> printfn "";red msg; false
-    | Error msg -> printfn "";red msg; false
-  | Error msg -> printfn "";red msg; false
+        goToNext stepCount; true
+      | Error msg -> printfn ""; red msg; false
+    | Error msg -> printfn ""; red msg; false
+  | Error msg -> printfn ""; red msg; false
   
 let execute stepCount username =
-  steps |> List.item stepCount |> executeStep username
+  steps |> List.item stepCount |> executeStep (stepCount + 1) username
 
 let printStep currentStep =
   Console.Clear()
@@ -108,6 +115,5 @@ let printStep currentStep =
   green <| sprintf "[Challenge %d of %d] %s" (currentStep+1) steps.Length step.Objective
   printfn ""
   printfn "[QuickHint] %s" step.QuickHint
-  printfn ""
 
 let totalSteps = steps.Length

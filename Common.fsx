@@ -9,5 +9,4 @@ let green = trace
 let yellow = traceFAKE
 let whitefn = printfn
 let white = printf
-
 let red = traceError
