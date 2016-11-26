@@ -95,9 +95,9 @@ let executeStep username step =
         |> personalise username
         |> green  
         goToNext(); true
-      | Error msg -> traceError msg; false
-    | Error msg -> traceError msg; false
-  | Error msg -> traceError msg; false
+      | Error msg -> printfn "";red msg; false
+    | Error msg -> printfn "";red msg; false
+  | Error msg -> printfn "";red msg; false
   
 let execute stepCount username =
   steps |> List.item stepCount |> executeStep username
