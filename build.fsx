@@ -1,13 +1,17 @@
 #r "packages/FAKE/tools/FakeLib.dll"
 open Fake
 #load "Runner.fsx"
+#load "Common.fsx"
 
 open System
+open Common
 
 let fileName = "MiniSuave.fsx"
 let runnerStepEnvVariable = "RUNNER_STEP"
 
 let isInit = ref false
+
+let username = ref "buddy"
 let runnerStep = ref 0
 let fileContent = ref ""
 let getRunnerStep () = 
@@ -21,10 +25,32 @@ let getRunnerStep () =
       step - 1
   | _ -> 0
 
+let msgsForCompilation = [
+  "Hmm. Let's see..."
+  "Hold on when I crunch on some bytes"
+  "Will be back with you in a jiffy. My circuits are processing our code"
+  "I am feeling lucky..."
+]
+let prompt step  =
+  Console.ForegroundColor <- ConsoleColor.White
+  white "%s λ " step
+  Console.ReadLine()
 
+let introMsg () =
+  Console.Clear()
+  green "Hi there! I am Mr.AcuBot, your fellow agent in this  Mission: MiniSuave" 
+  green "May I know your name?"
+  let name = prompt "[Intro]"
+  if name.Trim() = "" then
+    yellow "Wanna remain anonymous? No worries. Let me call you 'buddy'!"
+  else
+    username := name
+  green <| sprintf "Hello %s, Pleasure meeting you! Let's get started on Mission: MiniSuave." !username
+  Runner.goToNext()
+  ()
 
 let executeRunner () =
-  match Runner.execute !runnerStep with
+  match Runner.execute !runnerStep !username with
   | true ->
     let nextStep = !runnerStep + 1
     if nextStep < Runner.totalSteps then
@@ -36,17 +62,18 @@ let watch () =
     let fc = changes |> Seq.head
     let content = fc.FullPath |> System.IO.File.ReadAllText
     if content <> !fileContent then
-      printfn "compiling..."
+      yellow  <| "%s" <| pickRandomMessage msgsForCompilation
       executeRunner ()
       fileContent := content      
   )
   if !isInit then 
-    traceFAKE "Welcome to MiniSuave Workshop"
+    introMsg()
     let currentStep = getRunnerStep()
     Runner.printStep currentStep
     runnerStep := currentStep
     isInit := false
-  System.Console.ReadLine() |> ignore
+
+  System.Threading.Thread.Sleep(3 * 60 * 60 * 1000)
   watcher.Dispose()
 
 let init () =

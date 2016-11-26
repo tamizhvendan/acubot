@@ -5,11 +5,11 @@ type Assert =
 | Expression2 of string * string * string
 
 type Step ={
-  Description : string
-  Greeting : string
+  Objective : string
+  QuickHint : string
   Asserts : Assert list
+  Appreciations: string list
 }
-
 let recordErrMsg name labels =
   labels 
   |> List.map (fun (label, type') -> sprintf "`%s`(of type %s)" label type')
@@ -60,82 +60,94 @@ let composeAssets fname =
 
 let steps  = [
   {
-    Description = "Create a Discrimintated Union Type to represent `HttpMethod`"
-    Greeting = "That's a good start!"
+    Objective = "The objective of this challenge is to create a Discriminated Union Type to represent `HttpMethod`"
+    QuickHint = "Discriminated unions are used to represent a finite, well-defined set of choices. They can be equated to enums in other programming languages."
     Asserts = [Compiler2 ("HttpMethod.Get","'HttpMethod'(Get) is not defined"); Compiler "Put"; Compiler "Delete"; Compiler "Post"]
+    Appreciations = 
+      ["Great start, partner!"
+       "It is a good start %s"]
   }
   {
-    Description = "Create a Pair Type to representing `Header`"
-    Greeting = "Superb!"
+    Objective = "Let's create a Pair Type to representing `Header`"
+    QuickHint = "Superb!"
     Asserts = 
       [ Compiler2 ("""let header : Header = ("foo", "bar")""", "The type `Header` should be of type 'string * string'") 
         Expression ("header", """("foo", "bar")""")]
+    Appreciations = ["That was easy, wasn't it?"; "Hey, You got it right!"]
   }
   {
-    Description = "Create a Record type `Request`"
-    Greeting = "Keep going!"
+    Objective = "We need a new Record type `Request`"
+    QuickHint = ""
     Asserts = 
       [Compiler2 (req "test" "Get", 
           recordErrMsg "Request" [("Path","string"); ("Headers", "Header list"); ("HttpMethod", "HttpMethod")])]
+    Appreciations = ["You did learn how to put things together, %s!"; "Keep going!"]
   }
   {
-    Description = "Create a Discrimintated Union Type to represent `StatusCode`"
-    Greeting = "That's amazing!"
+    Objective = "Now, we shall define Discrimintated Union Type to represent `StatusCode`"
+    QuickHint = "Isn't it similar to what you did for `HttpMethod` in the first challenge?"
     Asserts = [Compiler "StatusCode.Ok"; Compiler "NotFound"; Compiler "BadRequest"]
+    Appreciations = ["%s is on a roll!"; "Let's keep the pace up!"]
   }
   {
-    Description = "Create a Record type `Response`"
-    Greeting = "Awesome!"
+    Objective = "A Record type `Response`, please?"
+    QuickHint = "May be you should do it the same way you did for `Request`?"
     Asserts = 
       [Compiler2 (res "test" "Ok", 
           recordErrMsg "Response" [("Content","string"); ("Headers", "Header list"); ("StatusCode", "StatusCode")])]
+    Appreciations = ["......and now we have `Response`. Great!"; "You had request and now you have Response too."]
   }
   {
-    Description = "Create a Record type `Context`"
-    Greeting = "Brilliant!"
+    Objective = "Now let us make a Record type `Context`"
+    QuickHint = "You can keep piling types to form newer ones."
     Asserts = 
       [Compiler2 (ctx (req "test" "Get") (res "test" "Ok"), 
           recordErrMsg "Context" [("Request","Request"); ("Response", "Response")])]
+    Appreciations = ["Good work, %s!"; "I hope you are enjoying it, %s!"]
   }
   {
-    Description = "Model `WebPart`"
-    Greeting = "Incredible!"
+    Objective = "We shall move on to modelling a `WebPart`"
+    QuickHint = "Incredible!"
     Asserts = 
       [Compiler2 ("let _ : WebPart = fun ctx -> ctx |> Some |> async.Return", "WebPart should be of type `Context -> Async<Context option>`") ]
+    Appreciations = ["Functions can also be first class citizens? That's amazing"]
   }
   {
-    Description = "Define our first Combinator `OK`"
-    Greeting = "Wonderful!"
+    Objective = "Let's define our first Combinator `OK`"
+    QuickHint = "Wonderful!"
     Asserts = 
       [Compiler2("""let _ : WebPart = OK "test";;""",
                   "The `OK` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
        Expression2("""run (OK "test")""",rawRes "Ok" "test", "OK")
       ]
+    Appreciations = ["OK! (pun intended)"; "Good going!"]
   }
   {
-    Description = "Define `NOT_FOUND` Combinator"
-    Greeting = "Nice.."
+    Objective = "We shall define `NOT_FOUND` Combinator now"
+    QuickHint = "Nice.."
     Asserts = 
       [Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
                   "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
        Expression2("""run (NOT_FOUND "test")""",rawRes "NotFound" "test", "NOT_FOUND")
       ]
+    Appreciations = ["Impressive %s!"; "Keep Going %s!"]
   }
   {
-    Description = "Define `BAD_REQUEST` Combinator"
-    Greeting = "Cool"
+    Objective = "Let's repeat that for `BAD_REQUEST` Combinator"
+    QuickHint = "Cool"
     Asserts = 
       [Compiler2("""let _ : WebPart = BAD_REQUEST "test";;""",
                   "The `BAD_REQUEST` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
        Expression2("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test", "BAD_REQUEST")
       ]
+    Appreciations = ["Was that a repetitive?"]
   }
   {
-    Description = "It's time for refactoring"
-    Greeting = "Great.."
+    Objective = "It's time for refactoring"
+    QuickHint = ""
     Asserts = 
       [Compiler2("""let _ : WebPart = response Ok "test";;""",
                   "The `response` function signature should be `StatusCode -> string -> Context -> Async<Context option>`")      
@@ -149,32 +161,36 @@ let steps  = [
        Expression2("""run (response Ok "test")""",rawRes "Ok" "test", "response function")
        Expression2("""run (OK "test")""",rawRes "Ok" "test", "OK")
        Expression2("""run (NOT_FOUND "test")""",rawRes "NotFound" "test", "NOT_FOUND")
-       Expression2("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test", "BAD_REQUEST")
-      ]
+       Expression2("""run (BAD_REQUEST "test")""",rawRes "BadRequest" "test", "BAD_REQUEST")]
+    Appreciations = ["We changed boring to fun, didn't we %s?"; "Hi5! %s"]
   }
   {
-    Description = "Define `GET` Filter"
-    Greeting = "Wonderful"
-    Asserts = filterAsserts "GET" "Get" "Post"      
+    Objective = "Let's define `GET` Filter"
+    QuickHint = "Wonderful"
+    Asserts = filterAsserts "GET" "Get" "Post" 
+    Appreciations = [""]     
   }
   {
-    Description = "Define `POST` Filter"
-    Greeting = "Superb"
-    Asserts = filterAsserts "POST" "Post" "Get"      
+    Objective = "Define `POST` Filter"
+    QuickHint = "Superb"
+    Asserts = filterAsserts "POST" "Post" "Get"
+    Appreciations = []  
   }
   {
-    Description = "Define `PUT` Filter"
-    Greeting = "Keep Going!"
-    Asserts = filterAsserts "PUT" "Put" "Get"      
+    Objective = "Define `PUT` Filter"
+    QuickHint = "Keep Going!"
+    Asserts = filterAsserts "PUT" "Put" "Get"
+    Appreciations = []
   }
   {
-    Description = "Define `DELETE` Filter"
-    Greeting = "That's amazing!"
-    Asserts = filterAsserts "DELETE" "Delete" "Get"      
+    Objective = "Define `DELETE` Filter"
+    QuickHint = "That's amazing!"
+    Asserts = filterAsserts "DELETE" "Delete" "Get"
+    Appreciations = []
   }
   {
-    Description = "Refactor Filter WebParts"
-    Greeting = "You are awesome!"
+    Objective = "Refactor Filter WebParts"
+    QuickHint = "You are awesome!"
     Asserts = 
       [Compiler2("""let t : WebPart = httpMethodFilter Get;;""",
                   "The `httpMethodFilter` function signature should be `Context -> Async<Context option>`")
@@ -184,29 +200,33 @@ let steps  = [
        @ (filterAsserts "POST" "Post" "Get" )
        @ (filterAsserts "PUT" "Put" "Get")
        @ (filterAsserts "DELETE" "Delete" "Put")
+    Appreciations = []
   }
   {
-    Description = "Define `Path` filter"
-    Greeting = "Well done!"
+    Objective = "Define `Path` filter"
+    QuickHint = "Well done!"
     Asserts = 
       [Compiler2("""let t : WebPart = Path "/test";;""",
                   "The `Path` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
        Expression2("run t",rawRes "NotFound" "", "Path")]
+    Appreciations = []
   }
   {
-    Description = "Define `compose` function"
-    Greeting = "Wow!"
+    Objective = "Define `compose` function"
+    QuickHint = "Wow!"
     Asserts = composeAssets "compose"
+    Appreciations = ["Wow, I just had an epiphany!"; "That was an Eureka moment!"]
   }
   {
-    Description = "Define `>=>` function"
-    Greeting = "Cool :-)"
+    Objective = "Define `>=>` function"
+    QuickHint = "Cool :-)"
     Asserts = composeAssets "(>=>)"
+    Appreciations = []
   }
   {
-    Description = "Define `Choose` function"
-    Greeting = "That's it! Well done :-)"
+    Objective = "Define `Choose` function"
+    QuickHint = "That's it! Well done :-)"
     Asserts = 
       [Compiler2("""let t : WebPart = Choose [GET >=> OK "GET"; POST >=> OK "POST"];;""",
                   "The `Choose` function signature should be `WebPart list -> Context -> Async<Context option>`")
@@ -214,5 +234,6 @@ let steps  = [
        Expression2("run t",rawRes "Ok" "GET", "Choose")
        Compiler(runWebPart2 "Post")
        Expression2("run t",rawRes "Ok" "POST", "Choose")]
+    Appreciations = []
   }
 ]

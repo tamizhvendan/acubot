@@ -2,10 +2,21 @@
 open Fake
 #load "Fsi.fsx"
 open Fsi
-
+open System
 #load "Steps.fsx"
 open Steps
 
+// ------------------
+let pickRandomMessage list =
+  let random = new System.Random()
+  let index = random.Next(0, List.length list)   
+  List.item index list   
+let green = trace
+let yellow = traceFAKE
+let whitefn = printfn
+let white = printf
+let red = traceError
+// ------------------
 
 
 // Get Current Step From Env Variable
@@ -51,6 +62,19 @@ let runAssert fsi = function
   | Success _ -> Success ()
   | Error msg -> Error (sprintf "[Assertion (%s) failed] : %s" errMsg msg)
 
+
+let personalise username (message : string) = 
+  message.Replace("%s", username)
+
+let inline goToNext () =
+  printfn ""
+  let rec prompt () =
+    yellow "« Type next to continue »"
+    white "λ "
+    let command : string = Console.ReadLine()
+    if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then () 
+    else prompt ()
+  prompt ()
 let rec runAsserts fsi xs =
   match xs with
   | [] -> Success ()
@@ -58,23 +82,32 @@ let rec runAsserts fsi xs =
     match runAssert fsi x with
     | Success _ -> runAsserts fsi xs
     | Error msg -> Error msg
-let executeStep step =
+let executeStep username step =
   use fsi = fsi()
   match evalInteraction fsi """ #load "MiniSuave.fsx";;  """ with
   | Success _ -> 
     match evalInteraction fsi """ open MiniSuave;; """ with
     | Success _ -> 
       match runAsserts fsi step.Asserts with
-      | Success _ -> tracefn "%s" step.Greeting; true
+      | Success _ -> 
+        printfn ""
+        pickRandomMessage step.Appreciations
+        |> personalise username
+        |> green  
+        goToNext(); true
       | Error msg -> traceError msg; false
     | Error msg -> traceError msg; false
   | Error msg -> traceError msg; false
   
-let execute stepCount =
-  steps |> List.item stepCount |> executeStep
+let execute stepCount username =
+  steps |> List.item stepCount |> executeStep username
 
 let printStep currentStep =
+  Console.Clear()
   let step = steps |> List.item currentStep
-  traceFAKE "[%d of %d] %s" (currentStep+1) steps.Length step.Description
+  green <| sprintf "[Challenge %d of %d] %s" (currentStep+1) steps.Length step.Objective
+  printfn ""
+  printfn "[QuickHint] %s" step.QuickHint
+  printfn ""
 
 let totalSteps = steps.Length
