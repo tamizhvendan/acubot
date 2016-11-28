@@ -5,6 +5,7 @@ open Fake
 
 open System
 open Common
+open System.IO
 
 let fileName = "MiniSuave.fsx"
 let runnerStepEnvVariable = "RUNNER_STEP"
@@ -40,7 +41,7 @@ let introMsg () =
   Console.Clear()
   green "Hi there! I am Mr.AcuBot, your fellow agent in this  Mission: MiniSuave" 
   green "May I know your name?"
-  let name = prompt "[Intro]"
+  let name = prompt <| sprintf "[MiniSuave%cIntro]" Path.DirectorySeparatorChar
   if name.Trim() = "" then
     yellow "Wanna remain anonymous? No worries. Let me call you 'buddy'!"
   else

@@ -10,6 +10,10 @@ type Step ={
   Asserts : Assert list
   Appreciations: string list
 }
+
+let genericAppreciationMsgs = 
+  [ "%s is on a roll!"]
+
 let recordErrMsg name labels =
   labels 
   |> List.map (fun (label, type') -> sprintf "`%s`(of type %s)" label type')
@@ -64,12 +68,11 @@ let steps  = [
     QuickHint = "Discriminated unions are used to represent a finite, well-defined set of choices. They can be equated to enums in other programming languages."
     Asserts = [Compiler2 ("HttpMethod.Get","'HttpMethod'(Get) is not defined"); Compiler "Put"; Compiler "Delete"; Compiler "Post"]
     Appreciations = 
-      ["Great start, partner!"
-       "It is a good start %s"]
+      []
   }
   {
     Objective = "Let's create a Pair Type to representing `Header`"
-    QuickHint = "Superb!"
+    QuickHint = """A tuple is defined as a comma separated collection of values. For example, ("key", "value") is a 2-tuple with the type (string * string). Tuples are extremely useful for creating ad hoc data structures which group together related values"""
     Asserts = 
       [ Compiler2 ("""let header : Header = ("foo", "bar")""", "The type `Header` should be of type 'string * string'") 
         Expression ("header", """("foo", "bar")""")]
@@ -77,7 +80,7 @@ let steps  = [
   }
   {
     Objective = "We need a new Record type `Request`"
-    QuickHint = ""
+    QuickHint = """Relational database theory uses a similar "record type" concept. In the relational model, a relation is a finite set of tuples all having the same finite set of attributes. This set of attributes is familiarly referred to as the set of column names."""
     Asserts = 
       [Compiler2 (req "test" "Get", 
           recordErrMsg "Request" [("Path","string"); ("Headers", "Header list"); ("HttpMethod", "HttpMethod")])]
@@ -107,14 +110,14 @@ let steps  = [
   }
   {
     Objective = "We shall move on to modelling a `WebPart`"
-    QuickHint = "Incredible!"
+    QuickHint = "A type can represent a function signature"
     Asserts = 
       [Compiler2 ("let _ : WebPart = fun ctx -> ctx |> Some |> async.Return", "WebPart should be of type `Context -> Async<Context option>`") ]
     Appreciations = ["Functions can also be first class citizens? That's amazing"]
   }
   {
     Objective = "Let's define our first Combinator `OK`"
-    QuickHint = "Wonderful!"
+    QuickHint = "A function that takes a string and returns a WebPart. (string -> WebPart)"
     Asserts = 
       [Compiler2("""let _ : WebPart = OK "test";;""",
                   "The `OK` function signature should be `string -> Context -> Async<Context option>`")
@@ -125,7 +128,7 @@ let steps  = [
   }
   {
     Objective = "We shall define `NOT_FOUND` Combinator now"
-    QuickHint = "Nice.."
+    QuickHint = "Can you duplicate what you did in the previous challenge with a change in `StatusCode`?"
     Asserts = 
       [Compiler2("""let _ : WebPart = NOT_FOUND "test";;""",
                   "The `NOT_FOUND` function signature should be `string -> Context -> Async<Context option>`")
@@ -136,7 +139,7 @@ let steps  = [
   }
   {
     Objective = "Let's repeat that for `BAD_REQUEST` Combinator"
-    QuickHint = "Cool"
+    QuickHint = "Can I assume that you don't need a hint here ʘ‿ʘ"
     Asserts = 
       [Compiler2("""let _ : WebPart = BAD_REQUEST "test";;""",
                   "The `BAD_REQUEST` function signature should be `string -> Context -> Async<Context option>`")
@@ -147,7 +150,7 @@ let steps  = [
   }
   {
     Objective = "It's time for refactoring"
-    QuickHint = ""
+    QuickHint = "Rule of Three states that the code can be copied once, but that when the same code is used three times, it should be extracted into a new function"
     Asserts = 
       [Compiler2("""let _ : WebPart = response Ok "test";;""",
                   "The `response` function signature should be `StatusCode -> string -> Context -> Async<Context option>`")      
@@ -166,31 +169,31 @@ let steps  = [
   }
   {
     Objective = "Let's define `GET` Filter"
-    QuickHint = "Wonderful"
+    QuickHint = "It's time to put the Option type in action"
     Asserts = filterAsserts "GET" "Get" "Post" 
     Appreciations = [""]     
   }
   {
     Objective = "Define `POST` Filter"
-    QuickHint = "Superb"
+    QuickHint = "Isn't it similar to what you did in the previous challenge"
     Asserts = filterAsserts "POST" "Post" "Get"
     Appreciations = []  
   }
   {
     Objective = "Define `PUT` Filter"
-    QuickHint = "Keep Going!"
+    QuickHint = "I am sure you are hands on Ctrl+C right now!"
     Asserts = filterAsserts "PUT" "Put" "Get"
     Appreciations = []
   }
   {
     Objective = "Define `DELETE` Filter"
-    QuickHint = "That's amazing!"
+    QuickHint = "Thinking of refactoring, hold a minute. It's a next challenge"
     Asserts = filterAsserts "DELETE" "Delete" "Get"
     Appreciations = []
   }
   {
     Objective = "Refactor Filter WebParts"
-    QuickHint = "You are awesome!"
+    QuickHint = "A time to refresh and duplicate what you did in the previous refactoring challenge"
     Asserts = 
       [Compiler2("""let t : WebPart = httpMethodFilter Get;;""",
                   "The `httpMethodFilter` function signature should be `Context -> Async<Context option>`")
@@ -204,7 +207,7 @@ let steps  = [
   }
   {
     Objective = "Define `Path` filter"
-    QuickHint = "Well done!"
+    QuickHint = "This is a different filter. You need to check on Request's `Path` instead of `HttpMethod`"
     Asserts = 
       [Compiler2("""let t : WebPart = Path "/test";;""",
                   "The `Path` function signature should be `string -> Context -> Async<Context option>`")
@@ -214,19 +217,19 @@ let steps  = [
   }
   {
     Objective = "Define `compose` function"
-    QuickHint = "Wow!"
+    QuickHint = "WARNING! A Mind bending functional programming ahead (^0_0^)"
     Asserts = composeAssets "compose"
     Appreciations = ["Wow, I just had an epiphany!"; "That was an Eureka moment!"]
   }
   {
     Objective = "Define `>=>` function"
-    QuickHint = "Cool :-)"
+    QuickHint = "You can create alias to make you code short and succinct"
     Asserts = composeAssets "(>=>)"
     Appreciations = []
   }
   {
     Objective = "Define `Choose` function"
-    QuickHint = "That's it! Well done :-)"
+    QuickHint = "How a functional programming talk will end without recursion?"
     Asserts = 
       [Compiler2("""let t : WebPart = Choose [GET >=> OK "GET"; POST >=> OK "POST"];;""",
                   "The `Choose` function signature should be `WebPart list -> Context -> Async<Context option>`")

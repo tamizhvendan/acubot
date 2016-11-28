@@ -5,8 +5,13 @@ open Fsi
 open System
 #load "Steps.fsx"
 open Steps
+open System.IO 
 
 // ------------------
+let pickIfEmpty list2 list1 =
+  match List.isEmpty list1 with
+  | true -> list2
+  | _ -> list1
 let pickRandomMessage list =
   let random = new System.Random()
   let index = random.Next(0, List.length list)   
@@ -17,7 +22,9 @@ let whitefn = printfn
 let white = printf
 let red = traceError
 // ------------------
-
+let (|>>) x f = 
+  printfn "%A" x
+  f x
 
 // Get Current Step From Env Variable
 // Load Current Assert
@@ -72,10 +79,10 @@ let inline goToNext step =
     match printNextStep, step with
     | true, 0 -> 
       yellow "« Type next to continue »"
-      white "[Intro] λ "
+      white "[MiniSuave%cIntro] λ " Path.DirectorySeparatorChar
     | true, _ ->         
       yellow "« Type next to continue »"
-      white "[Challenge %d] λ " step
+      white "[MiniSuave%cChallenge%c%d] λ " Path.DirectorySeparatorChar Path.DirectorySeparatorChar step
     | _ -> ()        
     let command : string = Console.ReadLine()
     if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()
@@ -98,7 +105,9 @@ let executeStep stepCount username step =
       match runAsserts fsi step.Asserts with
       | Success _ -> 
         printfn ""
-        pickRandomMessage step.Appreciations
+        step.Appreciations        
+        |> pickIfEmpty genericAppreciationMsgs
+        |> pickRandomMessage  
         |> personalise username
         |> green  
         goToNext stepCount; true
