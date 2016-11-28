@@ -11,9 +11,6 @@ type Step ={
   Appreciations: string list
 }
 
-let genericAppreciationMsgs = 
-  [ "%s is on a roll!"]
-
 let recordErrMsg name labels =
   labels 
   |> List.map (fun (label, type') -> sprintf "`%s`(of type %s)" label type')
@@ -60,7 +57,16 @@ let composeAssets fname =
         Expression2("run x", emptyRes, fname)
         Compiler(sprintf """let y = %s (OK "bar") GET""" fname)
         Expression2("run y", rawRes "Ok" "bar", fname)]
-        
+
+let genericAppreciationMsgs = 
+  [ "%s is on a roll!"
+    "Keep going!"
+    "Good work, %s!" 
+    "I hope you are enjoying it, %s!"
+    "Let's keep the pace up!"
+    "Impressive %s!"
+    "Impressive"
+    "Keep Going %s!"]    
 
 let steps  = [
   {
@@ -68,7 +74,8 @@ let steps  = [
     QuickHint = "Discriminated unions are used to represent a finite, well-defined set of choices. They can be equated to enums in other programming languages."
     Asserts = [Compiler2 ("HttpMethod.Get","'HttpMethod'(Get) is not defined"); Compiler "Put"; Compiler "Delete"; Compiler "Post"]
     Appreciations = 
-      []
+      [ "Great start, partner!"
+        "It is a good start %s"]
   }
   {
     Objective = "Let's create a Pair Type to representing `Header`"
@@ -84,13 +91,13 @@ let steps  = [
     Asserts = 
       [Compiler2 (req "test" "Get", 
           recordErrMsg "Request" [("Path","string"); ("Headers", "Header list"); ("HttpMethod", "HttpMethod")])]
-    Appreciations = ["You did learn how to put things together, %s!"; "Keep going!"]
+    Appreciations = ["You did learn how to put things together, %s!"]
   }
   {
     Objective = "Now, we shall define Discrimintated Union Type to represent `StatusCode`"
     QuickHint = "Isn't it similar to what you did for `HttpMethod` in the first challenge?"
     Asserts = [Compiler "StatusCode.Ok"; Compiler "NotFound"; Compiler "BadRequest"]
-    Appreciations = ["%s is on a roll!"; "Let's keep the pace up!"]
+    Appreciations = []
   }
   {
     Objective = "A Record type `Response`, please?"
@@ -106,7 +113,7 @@ let steps  = [
     Asserts = 
       [Compiler2 (ctx (req "test" "Get") (res "test" "Ok"), 
           recordErrMsg "Context" [("Request","Request"); ("Response", "Response")])]
-    Appreciations = ["Good work, %s!"; "I hope you are enjoying it, %s!"]
+    Appreciations = []
   }
   {
     Objective = "We shall move on to modelling a `WebPart`"
@@ -135,7 +142,7 @@ let steps  = [
        Compiler(runWebPart)
        Expression2("""run (NOT_FOUND "test")""",rawRes "NotFound" "test", "NOT_FOUND")
       ]
-    Appreciations = ["Impressive %s!"; "Keep Going %s!"]
+    Appreciations = []
   }
   {
     Objective = "Let's repeat that for `BAD_REQUEST` Combinator"
@@ -171,28 +178,28 @@ let steps  = [
     Objective = "Let's define `GET` Filter"
     QuickHint = "It's time to put the Option type in action"
     Asserts = filterAsserts "GET" "Get" "Post" 
-    Appreciations = [""]     
+    Appreciations = ["So, `null` was nullified, ha ha! :)"]     
   }
   {
-    Objective = "Define `POST` Filter"
+    Objective = "Now let's define `POST` Filter"
     QuickHint = "Isn't it similar to what you did in the previous challenge"
     Asserts = filterAsserts "POST" "Post" "Get"
-    Appreciations = []  
+    Appreciations = []
   }
   {
-    Objective = "Define `PUT` Filter"
+    Objective = "How about a `PUT` Filter"
     QuickHint = "I am sure you are hands on Ctrl+C right now!"
     Asserts = filterAsserts "PUT" "Put" "Get"
     Appreciations = []
   }
   {
-    Objective = "Define `DELETE` Filter"
+    Objective = "and finally we shall implement a `DELETE` Filter"
     QuickHint = "Thinking of refactoring, hold a minute. It's a next challenge"
     Asserts = filterAsserts "DELETE" "Delete" "Get"
     Appreciations = []
   }
   {
-    Objective = "Refactor Filter WebParts"
+    Objective = "Let us refactor Filter WebParts"
     QuickHint = "A time to refresh and duplicate what you did in the previous refactoring challenge"
     Asserts = 
       [Compiler2("""let t : WebPart = httpMethodFilter Get;;""",
@@ -203,7 +210,7 @@ let steps  = [
        @ (filterAsserts "POST" "Post" "Get" )
        @ (filterAsserts "PUT" "Put" "Get")
        @ (filterAsserts "DELETE" "Delete" "Put")
-    Appreciations = []
+    Appreciations = ["So %s, do you feel good about refactoring now?"]
   }
   {
     Objective = "Define `Path` filter"
@@ -213,7 +220,7 @@ let steps  = [
                   "The `Path` function signature should be `string -> Context -> Async<Context option>`")
        Compiler(runWebPart)
        Expression2("run t",rawRes "NotFound" "", "Path")]
-    Appreciations = []
+    Appreciations = ["Not all filter are the same!"]
   }
   {
     Objective = "Define `compose` function"
@@ -237,6 +244,6 @@ let steps  = [
        Expression2("run t",rawRes "Ok" "GET", "Choose")
        Compiler(runWebPart2 "Post")
        Expression2("run t",rawRes "Ok" "POST", "Choose")]
-    Appreciations = []
+    Appreciations = ["Mission Complete! Well done %s"]
   }
 ]
