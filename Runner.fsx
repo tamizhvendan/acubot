@@ -80,14 +80,14 @@ let inline goToNext step =
     | true, 0 -> 
       yellow "« Type next to continue »"
       white "[MiniSuave%cIntro] λ " Path.DirectorySeparatorChar
+    | true, x when x = steps.Length ->
+      System.Environment.Exit(0)
     | true, _ ->         
       yellow "« Type next to continue »"
       white "[MiniSuave%cChallenge%c%d] λ " Path.DirectorySeparatorChar Path.DirectorySeparatorChar step
     | _ -> ()        
     let command : string = Console.ReadLine()
-    if step = steps.Length then 
-      System.Environment.Exit(0)
-    else if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()
+    if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()
     else if command.Trim() = "" then prompt false
     else prompt true
   prompt true

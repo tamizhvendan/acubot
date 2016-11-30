@@ -8,7 +8,7 @@ open Common
 open System.IO
 
 let fileName = "MiniSuave.fsx"
-let runnerStepEnvVariable = "RUNNER_STEP"
+let runnerStepEnvVariable = "ACUBOT_GOTO"
 
 let isInit = ref false
 
