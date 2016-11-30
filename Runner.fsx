@@ -85,7 +85,8 @@ let inline goToNext step =
       white "[MiniSuave%cChallenge%c%d] λ " Path.DirectorySeparatorChar Path.DirectorySeparatorChar step
     | _ -> ()        
     let command : string = Console.ReadLine()
-    if step = steps.Length then () // TODO : Graceful exit
+    if step = steps.Length then 
+      System.Environment.Exit(0)
     else if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()
     else if command.Trim() = "" then prompt false
     else prompt true
