@@ -74,17 +74,19 @@ let personalise username (message : string) =
   message.Replace("%s", username)
 
 let inline goToNext step =
+  let os = System.Environment.OSVersion.Platform.ToString()
+  let promptChar = if os.ToLowerInvariant().Contains("win") then '>' else '$'
   printfn ""
   let rec prompt printNextStep =
     match printNextStep, step with
     | true, 0 -> 
       yellow "« Type next to continue »"
-      white "[MiniSuave%cIntro] λ " Path.DirectorySeparatorChar
+      white "[MiniSuave%cIntro] %c " Path.DirectorySeparatorChar promptChar
     | true, x when x = steps.Length ->
       System.Environment.Exit(0)
     | true, _ ->         
       yellow "« Type next to continue »"
-      white "[MiniSuave%cChallenge%c%d] λ " Path.DirectorySeparatorChar Path.DirectorySeparatorChar step
+      white "[MiniSuave%cChallenge%c%d] %c " Path.DirectorySeparatorChar Path.DirectorySeparatorChar step promptChar
     | _ -> ()        
     let command : string = Console.ReadLine()
     if String.Equals(command, "next", StringComparison.InvariantCultureIgnoreCase) then ()

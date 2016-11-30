@@ -16,7 +16,10 @@ let fsi () =
     let errStream = new StringWriter(sbErr)
     let fsiConfig = FsiEvaluationSession.GetDefaultConfiguration()
     let argv = [|fsiPath|]
-    FsiEvaluationSession.Create(fsiConfig, argv, inStream, outStream, errStream, collectible=true)
+    let collectible =
+        let os = System.Environment.OSVersion.Platform.ToString().ToLowerInvariant()
+        os.Contains("win") |> not
+    FsiEvaluationSession.Create(fsiConfig, argv, inStream, outStream, errStream, collectible=collectible)
 
 type Result<'T, 'E> =
 | Success of 'T

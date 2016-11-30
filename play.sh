@@ -1,0 +1,1 @@
+mono packages/FSharp.Compiler.Tools/tools/fsiAnyCpu.exe --use:Play.fsx

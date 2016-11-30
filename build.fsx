@@ -34,7 +34,9 @@ let msgsForCompilation = [
 ]
 let prompt step  =
   Console.ForegroundColor <- ConsoleColor.White
-  white "%s λ " step
+  let os = System.Environment.OSVersion.Platform.ToString()
+  let promptChar = if os.ToLowerInvariant().Contains("win") then '>' else '$'
+  white "%s %c " step promptChar
   Console.ReadLine()
 
 let introMsg () =
