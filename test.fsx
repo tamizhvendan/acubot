@@ -18,6 +18,8 @@ let executeWebPart inputContext webpart =
     match outputContext with
     | Some ctx ->
       printfn "[Status Code - %A]:%A" ctx.Response.StatusCode ctx.Response.Content
+      if not (List.isEmpty ctx.Response.Headers) then
+        printfn "Headers - %A" ctx.Response.Headers
     | None ->
       printfn "No WebPart found"
   } |> Async.RunSynchronously
